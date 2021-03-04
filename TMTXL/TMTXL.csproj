@@ -18,10 +18,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="OxyPlot.Wpf" Version="2.1.0-Preview1" />
     <PackageReference Include="ThermoFisher.CommonCore.BackgroundSubtraction" Version="5.0.0.38" />
     <PackageReference Include="ThermoFisher.CommonCore.Data" Version="5.0.0.38" />
     <PackageReference Include="ThermoFisher.CommonCore.MassPrecisionEstimator" Version="5.0.0.38" />
     <PackageReference Include="ThermoFisher.CommonCore.RawFileReader" Version="5.0.0.38" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\PLV\IsobaricAnalyzer\IsobaricAnalyzer.csproj" />
+    <ProjectReference Include="..\..\PLV\PatternTools\PatternTools.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,9 +48,6 @@
   <ItemGroup>
     <Reference Include="Ionic.Zip">
       <HintPath>libs\Ionic.Zip.dll</HintPath>
-    </Reference>
-    <Reference Include="PatternTools">
-      <HintPath>libs\PatternTools.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net">
       <HintPath>libs\protobuf-net.dll</HintPath>

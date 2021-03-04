@@ -1,12 +1,17 @@
-﻿using System;
+﻿using IsobaricAnalyzer;
+using PatternTools.MSParserLight;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Forms;
 using TMTXL.Model;
 using TMTXL.Parser;
@@ -108,16 +113,20 @@ namespace TMTXL.Control
                 version = "";
             }
 
-            Console.WriteLine("############################################################################");
-            Console.WriteLine("                                                              TMT - XLMS - v. " + version);
-            Console.WriteLine("                                                           Engineered by The Liu Lab             ");
-            Console.WriteLine("############################################################################");
+            Console.WriteLine("#################################################################");
+            Console.WriteLine("                                                   TMT - XLMS - v. " + version);
+            Console.WriteLine("                                                Engineered by The Liu Lab             ");
+            Console.WriteLine("#################################################################");
 
             string[] filesRAWthermo = null;
+            string[] xlinkFiles = null;
+
+            List<string> MySpectraFileIndex = new List<string>();
 
             try
             {
                 filesRAWthermo = Directory.GetFiles(programParams.RawFilesDir, "*.*", SearchOption.AllDirectories).Where(file => file.ToLower().EndsWith(".raw") || file.ToLower().EndsWith(".mzml") || file.ToLower().EndsWith(".mzxml")).ToArray();
+                xlinkFiles = Directory.GetFiles(programParams.RawFilesDir, "*.*", SearchOption.AllDirectories).Where(file => file.ToLower().EndsWith("_tm.csv")).ToArray();
 
             }
             catch (Exception e)
@@ -132,28 +141,77 @@ namespace TMTXL.Control
                 return;
             }
 
-            for (int i = 0; i < filesRAWthermo.Length; i++)
+            for (int i = 0; i < xlinkFiles.Length; i++)
             {
-                Console.WriteLine(" Processing RAW file: " + (i + 1) + " of " + filesRAWthermo.Length);
-                Console.WriteLine("\n");
-
                 try
                 {
-                    FileInfo fileName = new FileInfo(filesRAWthermo[i]);
-                    string rawFile = fileName.Name.Substring(0, fileName.Name.Length - 4);
-
-                    
-                    if (filesRAWthermo[i].ToLower().EndsWith(".raw"))
-                    {
-                        tandemMassSpectra = ParserThermo.Parse(filesRAWthermo[i]);
-                    }
-
+                    List<CSMSearchResult> cSMSearchResult = ParserXlinkX.Parse(xlinkFiles[i]);
                 }
                 catch (Exception ex)
                 {
                     //sbError.AppendLine("Bottom-up/Middle-down: " + filesBottomUpRAW[i]);
                     ErrorProcessing = true;
                 }
+            }
+
+
+
+            //for (int i = 0; i < filesRAWthermo.Length; i++)
+            //{
+            //    Console.WriteLine(" Processing RAW file: " + (i + 1) + " of " + filesRAWthermo.Length);
+            //    Console.WriteLine("\n");
+
+            //    try
+            //    {
+            //        FileInfo fileName = new FileInfo(filesRAWthermo[i]);
+            //        string rawFile = fileName.Name.Substring(0, fileName.Name.Length - 4);
+
+
+            //        if (filesRAWthermo[i].ToLower().EndsWith(".raw"))
+            //        {
+            //            tandemMassSpectra = ParserThermo.Parse(filesRAWthermo[i]);
+            //        }
+
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        //sbError.AppendLine("Bottom-up/Middle-down: " + filesBottomUpRAW[i]);
+            //        ErrorProcessing = true;
+            //    }
+            //}
+
+
+            IsobaricAnalyzerControl isobaricAnalyzerControl = new IsobaricAnalyzerControl();
+            isobaricAnalyzerControl.stdOut_console = false;
+
+            #region set params
+            isobaricAnalyzerControl.myParams = setIsobaricAnalyzerParams();
+            isobaricAnalyzerControl.myParams.LoadInputFiles = false;
+            #endregion
+
+            try
+            {
+                #region purity correction matrix
+
+                if (isobaricAnalyzerControl.myParams.NormalizationPurityCorrection)
+                {
+                    Console.WriteLine(" Retrieving purity correction matrix...");
+                    isobaricAnalyzerControl.setPurityCorrectionsMatrix(programParams.PurityCorrectionMatrix);
+                }
+                #endregion
+
+                isobaricAnalyzerControl.computeQuantitation();
+            }
+            catch (Exception exc)
+            {
+                ErrorProcessing = true;
+                Console.WriteLine("ERROR: " + exc.Message);
+                System.Windows.MessageBox.Show(
+                            exc.Message,
+                            "Error",
+                            (MessageBoxButton)MessageBoxButtons.OK,
+                            (MessageBoxImage)MessageBoxIcon.Error);
+                return;
             }
 
             TimeSpan dt = DateTime.Now - beginTimeSearch;
@@ -163,6 +221,33 @@ namespace TMTXL.Control
             FinalTime = dt.Days + " Day(s) " + dt.Hours + " Hour(s) " + dt.Minutes + " Minute(s) " + dt.Seconds + " Second(s).";
 
             FinishProcessing = true;
+        }
+
+        public IsobaricParams setIsobaricAnalyzerParams()
+        {
+            //Obtain class labels
+            string tmt10ClassLabels = "1 1 1 1 1 2 2 2 2 2";
+            List<int> classLabels = Regex.Split(tmt10ClassLabels, " ").Select(a => int.Parse(a)).ToList();
+            //Obtain the isobaric masses
+            string tmt10IsobaricMassess = "126.127726 127.124761 127.131081 128.128116 128.134436 129.131471 129.137790 130.134825 130.141145 131.138180";
+            List<double> isobaricMasses = Regex.Split(tmt10IsobaricMassess, " ").Select(a => double.Parse(a)).ToList();
+
+            IsobaricParams ip = new IsobaricParams()
+            {
+                ClassLabels = classLabels,
+                MarkerMZs = isobaricMasses,
+                AnalysisType = true,//It is not PLP file
+                RAWDirectory = programParams.RawFilesDir,
+                MarkerPPMTolerance = 20,
+                IonThreshold = 0.025,
+                NormalizationIdentifiedSpectra = false,
+                NormalizationAllSpectra = true,
+                NormalizationPurityCorrection = true,
+                PatternLabProjectOnlyUniquePeptides = false,
+                YadaMultiplexCorrectionDir = string.Empty,
+            };
+
+            return ip;
         }
 
     }

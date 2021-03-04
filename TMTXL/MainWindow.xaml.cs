@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -209,6 +210,43 @@ namespace TMTXL
         }
 
         /// <summary>
+        /// Method responsible for getting purity corrections matrix from datagrid form
+        /// </summary>
+        /// <param name="dataGridPurityCorrections"></param>
+        /// <returns></returns>
+        private List<List<double>> GetPurityCorrectionsFromForm()
+        {
+
+            if (dataGridPurityCorrections.ItemsSource == null)
+            {
+                return null;
+            }
+
+            DataTable dt = ((DataView)dataGridPurityCorrections.ItemsSource).ToTable();
+            List<List<double>> correction = new List<List<double>>();
+
+            for (int i = 0; i < dt.Rows.Count; i++)
+            {
+                List<double> row = new List<double>();
+                for (int j = 1; j < dt.Columns.Count; j++)
+                {
+                    if (j == 3)
+                    {
+                        //We need to add the monoisotopic mass as -1 a requirement
+                        row.Add(-1);
+                    }
+                    double v = double.Parse(dt.Rows[i].ItemArray[j].ToString());
+                    row.Add(v);
+                }
+                correction.Add(row);
+
+            }
+
+            return correction;
+        }
+
+
+        /// <summary>
         /// Method responsible for getting params from screen
         /// </summary>
         /// <returns></returns>
@@ -217,6 +255,7 @@ namespace TMTXL
             ProgramParams myParams = new ProgramParams();
             myParams.RawFilesDir = raw_files_dir.Text;
             myParams.IDdir = results_dir.Text;
+            myParams.PurityCorrectionMatrix = GetPurityCorrectionsFromForm();
 
             return myParams;
         }
@@ -250,7 +289,201 @@ namespace TMTXL
                 return false;
             }
 
+            if (myParams.PurityCorrectionMatrix == null)
+            {
+                Console.WriteLine("ERROR: No labeling kit in the purity correction tab has been selected.");
+                System.Windows.MessageBox.Show(
+                        "Please select the labeling kit in the purity correction tab.",
+                        "Warning",
+                        (MessageBoxButton)MessageBoxButtons.OK,
+                        (MessageBoxImage)MessageBoxIcon.Warning);
+                return false;
+            }
+
             return true;
+        }
+
+        private void dataGridPurityCorrections_LoadingRow(object sender, DataGridRowEventArgs e)
+        {
+            e.Row.Header = (e.Row.GetIndex() + 1).ToString();
+        }
+
+        private void comboBoxPurityDefaults_DropDownClosed(object sender, EventArgs e)
+        {
+            DataTable dt = new DataTable("Purity Corrections");
+
+            dt.Columns.Add("Label", typeof(string));
+            dt.Columns.Add("% of -2", typeof(double));
+            dt.Columns.Add("% of -1", typeof(double));
+            dt.Columns.Add("% of +1", typeof(double));
+            dt.Columns.Add("% of +2", typeof(double));
+
+            switch (comboBoxPurityDefaults.Text)
+            {
+                case "Select":
+                    dataGridPurityCorrections.ItemsSource = null;
+                    break;
+                case "iTRAQ 4":
+
+                    DataRow dr1 = dt.NewRow();
+                    dr1.ItemArray = new object[] { "114", 0, 1, 5.9, 0.2 };
+                    dt.Rows.Add(dr1);
+
+                    DataRow dr2 = dt.NewRow();
+                    dr2.ItemArray = new object[] { "115", 0, 2, 5.6, 0.1 };
+                    dt.Rows.Add(dr2);
+
+                    DataRow dr3 = dt.NewRow();
+                    dr3.ItemArray = new object[] { "116", 0, 3, 4.5, 0.1 };
+                    dt.Rows.Add(dr3);
+
+                    DataRow dr4 = dt.NewRow();
+                    dr4.ItemArray = new object[] { "117", 0.1, 4, 3.5, 0.1 };
+                    dt.Rows.Add(dr4);
+
+                    break;
+                case "TMT 6":
+
+                    DataRow dr6TMT126 = dt.NewRow();
+                    dr6TMT126.ItemArray = new object[] { "126", 0, 0.1, 9.4, 0.6 };
+                    dt.Rows.Add(dr6TMT126);
+
+                    DataRow dr6TMT127 = dt.NewRow();
+                    dr6TMT127.ItemArray = new object[] { "127", 0, 0.5, 6.7, 0 };
+                    dt.Rows.Add(dr6TMT127);
+
+                    DataRow dr6TMT128 = dt.NewRow();
+                    dr6TMT128.ItemArray = new object[] { "128", 0.1, 1.1, 4.2, 0 };
+                    dt.Rows.Add(dr6TMT128);
+
+                    DataRow dr6TMT129 = dt.NewRow();
+                    dr6TMT129.ItemArray = new object[] { "129", 0, 1.7, 4.1, 0 };
+                    dt.Rows.Add(dr6TMT129);
+
+                    DataRow dr6TMT130 = dt.NewRow();
+                    dr6TMT130.ItemArray = new object[] { "130", 0, 2.8, 2.5, 0 };
+                    dt.Rows.Add(dr6TMT130);
+
+                    DataRow dr6TMT131 = dt.NewRow();
+                    dr6TMT131.ItemArray = new object[] { "131", 0.1, 4.1, 4.7, 0.1 };
+                    dt.Rows.Add(dr6TMT131);
+                    break;
+
+                case "TMT 10":
+
+                    DataRow dr10TMT126 = dt.NewRow();
+                    dr10TMT126.ItemArray = new object[] { "126", 0, 0, 6.7, 0 };
+                    dt.Rows.Add(dr10TMT126);
+
+                    DataRow dr10TMT127N = dt.NewRow();
+                    dr10TMT127N.ItemArray = new object[] { "127N", 0, 0, 7.9, 0 };
+                    dt.Rows.Add(dr10TMT127N);
+
+                    DataRow dr10TMT127C = dt.NewRow();
+                    dr10TMT127C.ItemArray = new object[] { "127C", 0, 0.6, 5.8, 0 };
+                    dt.Rows.Add(dr10TMT127C);
+
+                    DataRow dr10TMT128N = dt.NewRow();
+                    dr10TMT128N.ItemArray = new object[] { "128N", 0, 0.9, 6.8, 0.3 };
+                    dt.Rows.Add(dr10TMT128N);
+
+                    DataRow dr10TMT128C = dt.NewRow();
+                    dr10TMT128C.ItemArray = new object[] { "128C", 0, 1.5, 5.8, 0 };
+                    dt.Rows.Add(dr10TMT128C);
+
+                    DataRow dr10TMT129N = dt.NewRow();
+                    dr10TMT129N.ItemArray = new object[] { "129N", 0, 1.6, 5.9, 0 };
+                    dt.Rows.Add(dr10TMT129N);
+
+                    DataRow dr10TMT129C = dt.NewRow();
+                    dr10TMT129C.ItemArray = new object[] { "129C", 0, 2.6, 3.9, 0 };
+                    dt.Rows.Add(dr10TMT129C);
+
+                    DataRow dr10TMT130N = dt.NewRow();
+                    dr10TMT130N.ItemArray = new object[] { "130N", 0, 3.2, 4.7, 0 };
+                    dt.Rows.Add(dr10TMT130N);
+
+                    DataRow dr10TMT130C = dt.NewRow();
+                    dr10TMT130C.ItemArray = new object[] { "130C", 0, 3.4, 3.6, 0 };
+                    dt.Rows.Add(dr10TMT130C);
+
+                    DataRow dr10TMT131 = dt.NewRow();
+                    dr10TMT131.ItemArray = new object[] { "131", 0, 3.2, 3.7, 0 };
+                    dt.Rows.Add(dr10TMT131);
+
+                    break;
+
+
+                case "TMT 16":
+
+                    DataRow dr16TMT126 = dt.NewRow();
+                    dr16TMT126.ItemArray = new object[] { "126", 0, 0, 7.73, 0 };
+                    dt.Rows.Add(dr16TMT126);
+
+                    DataRow dr16TMT127N = dt.NewRow();
+                    dr16TMT127N.ItemArray = new object[] { "127N", 0, 0, 7.46, 0 };
+                    dt.Rows.Add(dr16TMT127N);
+
+                    DataRow dr16TMT127C = dt.NewRow();
+                    dr16TMT127C.ItemArray = new object[] { "127C", 0, 0.71, 6.62, 0 };
+                    dt.Rows.Add(dr16TMT127C);
+
+                    DataRow dr16TMT128N = dt.NewRow();
+                    dr16TMT128N.ItemArray = new object[] { "128N", 0, 0.75, 6.67, 0 };
+                    dt.Rows.Add(dr16TMT128N);
+
+                    DataRow dr16TMT128C = dt.NewRow();
+                    dr16TMT128C.ItemArray = new object[] { "128C", 0, 1.34, 5.31, 0 };
+                    dt.Rows.Add(dr16TMT128C);
+
+                    DataRow dr16TMT129N = dt.NewRow();
+                    dr16TMT129N.ItemArray = new object[] { "129N", 0, 1.29, 5.48, 0 };
+                    dt.Rows.Add(dr16TMT129N);
+
+                    DataRow dr16TMT129C = dt.NewRow();
+                    dr16TMT129C.ItemArray = new object[] { "129C", 0, 2.34, 4.87, 0 };
+                    dt.Rows.Add(dr16TMT129C);
+
+                    DataRow dr16TMT130N = dt.NewRow();
+                    dr16TMT130N.ItemArray = new object[] { "130N", 0, 2.36, 4.57, 0 };
+                    dt.Rows.Add(dr16TMT130N);
+
+                    DataRow dr16TMT130C = dt.NewRow();
+                    dr16TMT130C.ItemArray = new object[] { "130C", 0, 2.67, 3.85, 0 };
+                    dt.Rows.Add(dr16TMT130C);
+
+                    DataRow dr16TMT131N = dt.NewRow();
+                    dr16TMT131N.ItemArray = new object[] { "131N", 0, 2.71, 3.73, 0 };
+                    dt.Rows.Add(dr16TMT131N);
+
+                    DataRow dr16TMT131C = dt.NewRow();
+                    dr16TMT131C.ItemArray = new object[] { "131C", 0, 3.69, 2.77, 0 };
+                    dt.Rows.Add(dr16TMT131C);
+
+                    DataRow dr16TMT132N = dt.NewRow();
+                    dr16TMT132N.ItemArray = new object[] { "132N", 0, 2.51, 2.76, 0 };
+                    dt.Rows.Add(dr16TMT132N);
+
+                    DataRow dr16TMT132C = dt.NewRow();
+                    dr16TMT132C.ItemArray = new object[] { "132C", 0, 4.11, 1.63, 0 };
+                    dt.Rows.Add(dr16TMT132C);
+
+                    DataRow dr16TMT133N = dt.NewRow();
+                    dr16TMT133N.ItemArray = new object[] { "133N", 0, 3.09, 1.58, 0 };
+                    dt.Rows.Add(dr16TMT133N);
+
+                    DataRow dr16TMT133C = dt.NewRow();
+                    dr16TMT133C.ItemArray = new object[] { "133C", 0, 4.63, 0.88, 0 };
+                    dt.Rows.Add(dr16TMT133C);
+
+                    DataRow dr16TMT134 = dt.NewRow();
+                    dr16TMT134.ItemArray = new object[] { "134", 0, 4.82, 0.86, 0 };
+                    dt.Rows.Add(dr16TMT134);
+                    break;
+
+            }
+
+            dataGridPurityCorrections.ItemsSource = new DataView(dt);
         }
     }
 }

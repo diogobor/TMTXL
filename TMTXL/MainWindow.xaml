@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TMTXL"
         mc:Ignorable="d"
-        Title="TMT - XL-MS" Height="450" Width="800" WindowStartupLocation="CenterScreen">
+        xmlns:oxy="http://oxyplot.org/wpf"
+        Title="TMT - XL-MS" Height="450" Width="910" WindowStartupLocation="CenterScreen">
     <Grid>
         <DockPanel>
             <Menu DockPanel.Dock="Top">
@@ -27,59 +28,95 @@
             </Menu>
             <TextBox AcceptsReturn="True" />
         </DockPanel>
-        <StackPanel Orientation="Vertical">
-            
-        
-        <GroupBox Margin="10,20,10,10" Padding="20">
-            <GroupBox.Header>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock FontWeight="Bold">Parameters</TextBlock>
-                </StackPanel>
-            </GroupBox.Header>
+        <StackPanel Orientation="Horizontal">
+
             <StackPanel Orientation="Vertical">
-                
-                <TextBlock>Directory with RAW files:</TextBlock>
-                <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="raw_files_dir" MinWidth="640" HorizontalAlignment="Stretch"/>
 
-                    <Button x:Name="raw_files_btn" Click="raw_files_btn_Click" Margin="10,0" HorizontalAlignment="Right" Cursor="Hand" ToolTip="Specify the directory where are the RAW files. For more information, access the Read Me on Help menu.">
-                        <DockPanel>
-                            <Image Source="/load.jpg"/>
-                        </DockPanel>
-                    </Button>
+                <GroupBox Margin="10,20,10,10" Padding="5">
+                    <GroupBox.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontWeight="Bold">Parameters</TextBlock>
+                        </StackPanel>
+                    </GroupBox.Header>
 
-                </StackPanel>
+                    <StackPanel Orientation="Vertical">
 
-                <TextBlock>Directory with identifications:</TextBlock>
-                <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="results_dir" MinWidth="640" HorizontalAlignment="Stretch"/>
-                    <Button x:Name="results_btn" Click="results_btn_Click" Margin="10,0" HorizontalAlignment="Right" Cursor="Hand" ToolTip="Specify the directory where are the result files. For more information, access the Read Me on Help menu.">
-                        <DockPanel>
-                                <Image Source="/load.jpg"/>
-                        </DockPanel>
-                    </Button>
-                </StackPanel>
+                        <TextBlock>Directory with RAW files:</TextBlock>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox x:Name="raw_files_dir" MinWidth="450" HorizontalAlignment="Stretch"/>
 
-                <Button x:Name="run_btn" Click="run_btn_Click" Height="20" Margin="0,20" Padding="10,1,10,1" HorizontalAlignment="Center" Cursor="Hand">
-                    <StackPanel Orientation="Horizontal">
-                        <DockPanel>
-                                <Image x:Name="run_btn_img" Source="/goBtn.png" />
-                            </DockPanel>
-                        <TextBlock x:Name="run_btn_text" Margin="20,0,0,0" Width="40">Run</TextBlock>
+                            <Button x:Name="raw_files_btn" Click="raw_files_btn_Click" Margin="10,0" HorizontalAlignment="Right" Cursor="Hand" ToolTip="Specify the directory where are the RAW files. For more information, access the Read Me on Help menu.">
+                                <DockPanel>
+                                    <Image Source="/load.jpg"/>
+                                </DockPanel>
+                            </Button>
+
+                        </StackPanel>
+
+                        <TextBlock>Directory with identifications:</TextBlock>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox x:Name="results_dir" MinWidth="450" HorizontalAlignment="Stretch"/>
+                            <Button x:Name="results_btn" Click="results_btn_Click" Margin="10,0" HorizontalAlignment="Right" Cursor="Hand" ToolTip="Specify the directory where are the result files. For more information, access the Read Me on Help menu.">
+                                <DockPanel>
+                                    <Image Source="/load.jpg"/>
+                                </DockPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <Button x:Name="run_btn" Click="run_btn_Click" Height="20" Margin="0,20" Padding="10,1,10,1" HorizontalAlignment="Center" Cursor="Hand">
+                            <StackPanel Orientation="Horizontal">
+                                <DockPanel>
+                                    <Image x:Name="run_btn_img" Source="/goBtn.png" />
+                                </DockPanel>
+                                <TextBlock x:Name="run_btn_text" Margin="20,0,0,0" Width="40">Run</TextBlock>
+                            </StackPanel>
+
+                        </Button>
                     </StackPanel>
+                </GroupBox>
 
-                </Button>
+                <GroupBox Margin="10,0,10,10" Padding="5">
+                    <GroupBox.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontWeight="Bold">Log</TextBlock>
+                        </StackPanel>
+                    </GroupBox.Header>
+                    <ListBox x:Name="log_output" Height="125" Width="480"></ListBox>
+                </GroupBox>
+
             </StackPanel>
-        </GroupBox>
 
-        <GroupBox Margin="10,0,10,10" Padding="20">
-            <GroupBox.Header>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock FontWeight="Bold">Log</TextBlock>
-                </StackPanel>
-            </GroupBox.Header>
-                <ListBox x:Name="log_output" Height="95"></ListBox>
-        </GroupBox>
+            <StackPanel>
+                <GroupBox Margin="0,20,10,10" Padding="5">
+                    <GroupBox.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontWeight="Bold"></TextBlock>
+                        </StackPanel>
+                    </GroupBox.Header>
+
+                    <TabControl x:Name="tabControl" Grid.Column="1" Height="308" Width="320">
+                        <TabItem Header="Purity Corrections" x:Name="TabItemPurityCorrection">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="19*"/>
+                                    <ColumnDefinition Width="138*"/>
+                                </Grid.ColumnDefinitions>
+                                <DataGrid x:Name="dataGridPurityCorrections" Margin="10,10,1,37" LoadingRow="dataGridPurityCorrections_LoadingRow" Grid.ColumnSpan="2" />
+                                <Label Content="Load purity defaults for: " HorizontalAlignment="Left" Margin="13,0,0,6" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
+                                <ComboBox x:Name="comboBoxPurityDefaults" Margin="120,0,1,8" VerticalAlignment="Bottom" DropDownClosed="comboBoxPurityDefaults_DropDownClosed" Grid.Column="1">
+                                    <ComboBoxItem IsSelected="True">Select</ComboBoxItem>
+                                    <ComboBoxItem>iTRAQ 4</ComboBoxItem>
+                                    <ComboBoxItem>TMT 6</ComboBoxItem>
+                                    <ComboBoxItem>TMT 10</ComboBoxItem>
+                                    <ComboBoxItem>TMT 16</ComboBoxItem>
+                                </ComboBox>
+
+                            </Grid>
+                        </TabItem>
+                    </TabControl>
+                </GroupBox>
+
+            </StackPanel>
         </StackPanel>
     </Grid>
 </Window>

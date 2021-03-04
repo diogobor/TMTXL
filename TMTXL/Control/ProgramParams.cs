@@ -15,6 +15,8 @@ namespace TMTXL.Control
         public string RawFilesDir { get;  set; }
         [ProtoMember(2)]
         public string IDdir { get;  set; }
+        [ProtoMember(3)]
+        public List<List<double>> PurityCorrectionMatrix { get; set; }
 
         /// <summary>
         /// Empty constructor
