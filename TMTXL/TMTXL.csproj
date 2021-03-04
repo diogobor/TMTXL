@@ -1,0 +1,67 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <StartupObject>TMTXL.Control.Program</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="button_cancel_little.png" />
+    <None Remove="exit.ico" />
+    <None Remove="goBtn.jpg" />
+    <None Remove="goBtn.png" />
+    <None Remove="load.jpg" />
+    <None Remove="RAW.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ThermoFisher.CommonCore.BackgroundSubtraction" Version="5.0.0.38" />
+    <PackageReference Include="ThermoFisher.CommonCore.Data" Version="5.0.0.38" />
+    <PackageReference Include="ThermoFisher.CommonCore.MassPrecisionEstimator" Version="5.0.0.38" />
+    <PackageReference Include="ThermoFisher.CommonCore.RawFileReader" Version="5.0.0.38" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Ionic.Zip">
+      <HintPath>libs\Ionic.Zip.dll</HintPath>
+    </Reference>
+    <Reference Include="PatternTools">
+      <HintPath>libs\PatternTools.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net">
+      <HintPath>libs\protobuf-net.dll</HintPath>
+    </Reference>
+    <Reference Include="SpectrumViewer2">
+      <HintPath>libs\SpectrumViewer2.dll</HintPath>
+    </Reference>
+    <Reference Include="SpectrumWizard">
+      <HintPath>libs\SpectrumWizard.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="button_cancel_little.png" />
+    <Resource Include="exit.ico" />
+    <Resource Include="goBtn.png" />
+    <Resource Include="load.jpg" />
+  </ItemGroup>
+
+</Project>
