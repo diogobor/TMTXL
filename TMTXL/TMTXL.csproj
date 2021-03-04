@@ -26,7 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\PLV\IsobaricAnalyzer\IsobaricAnalyzer.csproj" />
     <ProjectReference Include="..\..\PLV\PatternTools\PatternTools.csproj" />
   </ItemGroup>
 

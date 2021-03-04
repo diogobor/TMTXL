@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PatternTools;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -31,8 +32,9 @@ namespace TMTXL.Model
         public double peptide_beta_mass { get; set; }
         public double peptide_alpha_score { get; set; }
         public double peptide_beta_score { get; set; }
+        public string fileName { get; set; }
 
-        public double quantitation { get; set; }
+        public List<double> quantitation { get; set; }
 
         /// <summary>
         /// Constructor

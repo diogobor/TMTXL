@@ -45,7 +45,7 @@ namespace TMTXL.Parser
             }
         }
 
-        public static List<CSMSearchResult> Parse(string fileName)
+        public static List<CSMSearchResult> Parse(string fileName, short fileIndex)
         {
             List<CSMSearchResult> myCSMs = new List<CSMSearchResult>();
             StreamReader sr = null;
@@ -72,7 +72,7 @@ namespace TMTXL.Parser
                     }
                     else
                     {
-                        Process(line);
+                        Process(line, fileIndex);
                         if (current_csm != null)
                         {
                             myCSMs.Add(current_csm);
@@ -85,7 +85,7 @@ namespace TMTXL.Parser
                 if (new_progress > old_progress)
                 {
                     old_progress = new_progress;
-                    Console.Write(" Reading XlinkX File: " + old_progress + "%");
+                    Console.Write("Reading XlinkX File: " + old_progress + "%");
                 }
             }
 
@@ -97,7 +97,7 @@ namespace TMTXL.Parser
         /// Method responsible for processing each line file
         /// </summary>
         /// <param name="qtdParser"></param>
-        private static void Process(string row)
+        private static void Process(string row, short fileIndex)
         {
             List<string> cols = new List<string>();
             string[] initial_cols = Regex.Split(row, "\",");
@@ -184,7 +184,7 @@ namespace TMTXL.Parser
             if (index == -1) return;
             peptide_beta_score = Convert.ToDouble(cols[index]);
 
-            current_csm = new CSMSearchResult(_index, -1, scanNumber, charge, precursor_mass, peptide_alpha, peptide_beta, pos_alpha, pos_beta, protein_alpha, protein_beta, peptide_alpha_mass, peptide_beta_mass, peptide_alpha_score, peptide_beta_score);
+            current_csm = new CSMSearchResult(_index, fileIndex, scanNumber, charge, precursor_mass, peptide_alpha, peptide_beta, pos_alpha, pos_beta, protein_alpha, protein_beta, peptide_alpha_mass, peptide_beta_mass, peptide_alpha_score, peptide_beta_score);
         }
     }
 }

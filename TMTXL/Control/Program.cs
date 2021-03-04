@@ -25,7 +25,8 @@ namespace TMTXL.Control
         public bool ErrorProcessing;
         public string FinalTime { get; set; }
 
-        public List<MassSpectrum> tandemMassSpectra = null;
+        public List<CSMSearchResult> csmSearchResults { get; set; }
+        public List<MSUltraLight> csmSpectra { get; set; }
 
         [STAThread]
         public static void Main()
@@ -119,14 +120,15 @@ namespace TMTXL.Control
             Console.WriteLine("#################################################################");
 
             string[] filesRAWthermo = null;
-            string[] xlinkFiles = null;
+            List<FileInfo> xlinkFiles = null;
 
             List<string> MySpectraFileIndex = new List<string>();
 
             try
             {
                 filesRAWthermo = Directory.GetFiles(programParams.RawFilesDir, "*.*", SearchOption.AllDirectories).Where(file => file.ToLower().EndsWith(".raw") || file.ToLower().EndsWith(".mzml") || file.ToLower().EndsWith(".mzxml")).ToArray();
-                xlinkFiles = Directory.GetFiles(programParams.RawFilesDir, "*.*", SearchOption.AllDirectories).Where(file => file.ToLower().EndsWith("_tm.csv")).ToArray();
+                DirectoryInfo folder = new DirectoryInfo(programParams.RawFilesDir);
+                xlinkFiles = folder.GetFiles("*_tm.csv", SearchOption.AllDirectories).ToList();
 
             }
             catch (Exception e)
@@ -141,52 +143,31 @@ namespace TMTXL.Control
                 return;
             }
 
-            for (int i = 0; i < xlinkFiles.Length; i++)
+            csmSearchResults = new List<CSMSearchResult>(); 
+            List<string> MyFileNameIndex = new List<string>();
+            for (int i = 0; i < xlinkFiles.Count; i++)
             {
                 try
                 {
-                    List<CSMSearchResult> cSMSearchResult = ParserXlinkX.Parse(xlinkFiles[i]);
+                    Console.WriteLine("Reading XlinkX data: " + xlinkFiles[i].FullName);
+                    //Get RAW fie name
+                    string[] cols = xlinkFiles[i].DirectoryName.Split("\\");
+                    MyFileNameIndex.Add(cols[cols.Length - 1]);
+                    csmSearchResults.AddRange(ParserXlinkX.Parse(xlinkFiles[i].FullName, (short)i));
                 }
                 catch (Exception ex)
                 {
-                    //sbError.AppendLine("Bottom-up/Middle-down: " + filesBottomUpRAW[i]);
                     ErrorProcessing = true;
                 }
             }
 
-
-
-            //for (int i = 0; i < filesRAWthermo.Length; i++)
-            //{
-            //    Console.WriteLine(" Processing RAW file: " + (i + 1) + " of " + filesRAWthermo.Length);
-            //    Console.WriteLine("\n");
-
-            //    try
-            //    {
-            //        FileInfo fileName = new FileInfo(filesRAWthermo[i]);
-            //        string rawFile = fileName.Name.Substring(0, fileName.Name.Length - 4);
-
-
-            //        if (filesRAWthermo[i].ToLower().EndsWith(".raw"))
-            //        {
-            //            tandemMassSpectra = ParserThermo.Parse(filesRAWthermo[i]);
-            //        }
-
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        //sbError.AppendLine("Bottom-up/Middle-down: " + filesBottomUpRAW[i]);
-            //        ErrorProcessing = true;
-            //    }
-            //}
-
-
             IsobaricAnalyzerControl isobaricAnalyzerControl = new IsobaricAnalyzerControl();
             isobaricAnalyzerControl.stdOut_console = false;
+            isobaricAnalyzerControl.myCSMs = csmSearchResults;
+            isobaricAnalyzerControl.rawfileIndex = MyFileNameIndex;
 
             #region set params
             isobaricAnalyzerControl.myParams = setIsobaricAnalyzerParams();
-            isobaricAnalyzerControl.myParams.LoadInputFiles = false;
             #endregion
 
             try
@@ -201,6 +182,8 @@ namespace TMTXL.Control
                 #endregion
 
                 isobaricAnalyzerControl.computeQuantitation();
+                csmSpectra = isobaricAnalyzerControl.csmSpectra;
+
             }
             catch (Exception exc)
             {
