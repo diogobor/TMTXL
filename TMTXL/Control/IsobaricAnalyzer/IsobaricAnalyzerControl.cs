@@ -117,7 +117,10 @@ namespace IsobaricAnalyzer
             {
                 Console.WriteLine("Extracting data for " + rawFile.Name);
 
-                List<MSUltraLight> spectraFromAThermoFile = ParserUltraLightRawFlash.Parse(rawFile.FullName, 2, -1, false, null, stdOut_console);
+                string current_fileNme = rawFile.Name.Substring(0, rawFile.Name.Length - rawFile.Extension.Length);
+                int rawFileIndex = rawfileIndex.IndexOf(current_fileNme);
+
+                List<MSUltraLight> spectraFromAThermoFile = ParserUltraLightRawFlash.Parse(rawFile.FullName, 2, (short)rawFileIndex, false, null, stdOut_console);
                 spectraFromAThermoFile.RemoveAll(a => a.Ions == null);
 
                 double[] totalSignal = new double[myParams.MarkerMZs.Count];
@@ -132,9 +135,7 @@ namespace IsobaricAnalyzer
                 //Get info for total signal normalization
                 foreach (MSUltraLight ms in spectraFromAThermoFile)
                 {
-                    ms.Ions.RemoveAll(a => a.MZ > 400);
-
-                    double[] thisQuantitation = GetIsobaricSignal(ms.Ions, myParams.MarkerMZs);
+                    double[] thisQuantitation = GetIsobaricSignal(ms.Ions.Where(a => a.MZ < 200).ToList(), myParams.MarkerMZs);
                     double maxSignal = thisQuantitation.Max();
 
                     // If a signal is less than the percentage specified in the ion threshold it should become 0.  
@@ -157,8 +158,6 @@ namespace IsobaricAnalyzer
                         totalSignal[i] += thisQuantitation[i];
                     }
 
-                    string current_fileNme = rawFile.Name.Substring(0, rawFile.Name.Length - rawFile.Extension.Length);
-                    int rawFileIndex = rawfileIndex.IndexOf(current_fileNme);
                     if (rawFileIndex != -1)
                     {
                         CSMSearchResult cSMSearchResult = myCSMs.Where(a => a.scanNumber == ms.ScanNumber && a.fileIndex == rawFileIndex).FirstOrDefault();

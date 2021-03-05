@@ -24,6 +24,7 @@ namespace TMTXL.Results
     {
         private List<CSMSearchResult> CSMSearchResults;
         private List<MSUltraLight> Spectra;
+        private List<string> FileNameIndex;
 
         public ResultsWin()
         {
@@ -35,16 +36,18 @@ namespace TMTXL.Results
             this.Close();
         }
 
-        public void Setup(List<CSMSearchResult> cSMSearchResults, List<MSUltraLight> spectra)
+        public void Setup(List<CSMSearchResult> cSMSearchResults, List<MSUltraLight> spectra, List<string> fileNameIndex)
         {
             Spectra = spectra;
             CSMSearchResults = cSMSearchResults;
+            FileNameIndex = fileNameIndex;
             results_datagrid.ItemsSource = (from csm in cSMSearchResults.AsParallel()
                                             select new
                                             {
                                                 scanNumber = csm.scanNumber,
-                                                peptide_alpha = csm.peptide_alpha,
-                                                peptide_beta = csm.peptide_beta,
+                                                file_name = FileNameIndex[csm.fileIndex] + ".raw",
+                                                alpha_peptide = csm.peptide_alpha,
+                                                beta_peptide = csm.peptide_beta,
                                                 channel_126 = csm.quantitation[0],
                                                 channel_127N = csm.quantitation[1],
                                                 channel_127C = csm.quantitation[2],

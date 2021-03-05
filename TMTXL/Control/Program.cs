@@ -27,6 +27,7 @@ namespace TMTXL.Control
 
         public List<CSMSearchResult> csmSearchResults { get; set; }
         public List<MSUltraLight> csmSpectra { get; set; }
+        public List<string> rawFileIndex { get; set; }
 
         [STAThread]
         public static void Main()
@@ -143,7 +144,7 @@ namespace TMTXL.Control
                 return;
             }
 
-            csmSearchResults = new List<CSMSearchResult>(); 
+            csmSearchResults = new List<CSMSearchResult>();
             List<string> MyFileNameIndex = new List<string>();
             for (int i = 0; i < xlinkFiles.Count; i++)
             {
@@ -183,6 +184,7 @@ namespace TMTXL.Control
 
                 isobaricAnalyzerControl.computeQuantitation();
                 csmSpectra = isobaricAnalyzerControl.csmSpectra;
+                rawFileIndex = isobaricAnalyzerControl.rawfileIndex;
 
             }
             catch (Exception exc)

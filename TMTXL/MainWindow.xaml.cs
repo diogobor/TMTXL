@@ -80,7 +80,7 @@ namespace TMTXL
                     }
 
                     ResultsWin resultsWin = new ResultsWin();
-                    resultsWin.Setup(mainProgramGUI.csmSearchResults, mainProgramGUI.csmSpectra);
+                    resultsWin.Setup(mainProgramGUI.csmSearchResults, mainProgramGUI.csmSpectra, mainProgramGUI.rawFileIndex);
                     resultsWin.ShowDialog();
                 }
             }
