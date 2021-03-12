@@ -1,6 +1,5 @@
 ﻿using PatternTools;
 using PatternTools.FastaParser;
-using PatternTools.MSParserLight;
 using PatternTools.PLP;
 using System;
 using System.Collections.Generic;
@@ -11,16 +10,19 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using TMTXL.Control;
 using TMTXL.Model;
 
 namespace IsobaricAnalyzer
 {
     public class IsobaricAnalyzerControl
     {
+
+
         /// <summary>
         /// Private variables
         /// </summary>
-        private List<(CSMSearchResult psm, MSUltraLight ms)> csmsToAnalyze { get; set; }
+        private List<(CSMSearchResult psm, PatternTools.MSParserLight.MSUltraLight ms)> csmsToAnalyze { get; set; }
         private List<FastaItem> theFastaItems { get; set; }
         private PatternTools.CSML.Matrix purityCorrectionsMatrix { get; set; }
 
@@ -30,15 +32,13 @@ namespace IsobaricAnalyzer
         public IsobaricParams myParams { get; set; }
         public Dictionary<string, double[]> signalAllNormalizationDictionary { get; set; }
         public Dictionary<string, double[]> signalIdentifiedNormalizationDictionary { get; set; }
-        public List<CSMSearchResult> myCSMs { get; set; }
-        public List<MSUltraLight> csmSpectra { get; set; }
-        public List<string> rawfileIndex { get; set; }
+        public ResultsPackage resultsPackage { get; set; }
 
         public bool stdOut_console { get; set; } = true;
 
         public void setCsmsToAnalyze(List<CSMSearchResult> psmList)
         {
-            csmsToAnalyze = new List<(CSMSearchResult psm, MSUltraLight ms)>();
+            csmsToAnalyze = new List<(CSMSearchResult psm, PatternTools.MSParserLight.MSUltraLight ms)>();
 
 
         }
@@ -72,10 +72,10 @@ namespace IsobaricAnalyzer
 
             #region initialize dictionary(ies) for the normalize reporter ions (channels) of all or identified spectra
 
-            if (myParams.NormalizationAllSpectra)
-            {
-                this.setAllNormalizationDictionary();
-            }
+            //if (myParams.NormalizationAllSpectra)
+            //{
+            this.setAllNormalizationDictionary();
+            //}
 
             if (myParams.NormalizationIdentifiedSpectra)
             {
@@ -86,8 +86,156 @@ namespace IsobaricAnalyzer
 
             //compute the normalization for each spectrum
             this.computeQuantNormalization();
+
+            //compute the quantitation of all xls
+            this.computeXLQuantitation();
+
+            //compute the quantitation of all genes
+            this.computePPIQuantitation();
         }
 
+        private void computePPIQuantitation()
+        {
+            if (resultsPackage == null || resultsPackage.XLSearchResults == null || resultsPackage.XLSearchResults.Count == 0) return;
+
+            Console.WriteLine("Computing PPI quantitation...");
+
+            object progress_lock = new object();
+            int ppi_processed = 0;
+            int old_progress = 0;
+            double qtdPpi = resultsPackage.PPIResults.Count();
+
+            foreach (ProteinProteinInteraction ppi in resultsPackage.PPIResults)
+            {
+                double[] thisQuantitation = new double[myParams.MarkerMZs.Count];
+                List<CSMSearchResult> xl_results = resultsPackage.XLSearchResults.Where(a => a.genes_alpha.Contains(ppi.gene_a) && a.genes_beta.Contains(ppi.gene_b)).ToList();
+
+                if (xl_results.Count > 0)
+                {
+                    if (xl_results.Count > 1)
+                    {
+                        for (int i = 0; i < myParams.MarkerMZs.Count; i++)
+                        {
+                            var orderedQuant = xl_results.Select(a => a.quantitation[i]).OrderBy(p => p);
+                            int count = orderedQuant.Count();
+                            double median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
+                            median /= 2;
+                            thisQuantitation[i] = median;
+                        }
+                    }
+                    else
+                        ppi.quantitation = xl_results[0].quantitation;
+                }
+                ppi.quantitation = thisQuantitation.ToList();
+
+                lock (progress_lock)
+                {
+                    ppi_processed++;
+                    int new_progress = (int)((double)ppi_processed / (qtdPpi) * 100);
+                    if (new_progress > old_progress)
+                    {
+                        old_progress = new_progress;
+
+                        if (stdOut_console)
+                        {
+                            int currentLineCursor = Console.CursorTop;
+                            Console.SetCursorPosition(0, Console.CursorTop);
+                            Console.Write("XL Quantitation progress: " + old_progress + "%");
+                            Console.SetCursorPosition(0, currentLineCursor);
+
+                        }
+                        else
+                        {
+                            Console.Write("XL Quantitation progress: " + old_progress + "%");
+                        }
+                    }
+                }
+            }
+        }
+
+        private void computeXLQuantitation()
+        {
+            if (resultsPackage == null || resultsPackage.CSMSearchResults == null || resultsPackage.CSMSearchResults.Count == 0) return;
+
+            Console.WriteLine("Computing XL quantitation...");
+
+            var xlDic = from csm in resultsPackage.CSMSearchResults
+                        group csm by new
+                        {
+                            csm.peptide_alpha,
+                            csm.peptide_beta,
+                            csm.pos_alpha,
+                            csm.pos_beta
+                        }
+                         into groupedSeq
+                        select new { xl = groupedSeq.Key, csms = groupedSeq.ToList() };
+
+            resultsPackage.XLSearchResults = new List<CSMSearchResult>();
+
+            object progress_lock = new object();
+            int xl_processed = 0;
+            int old_progress = 0;
+            double qtdXL = xlDic.Count();
+
+            foreach (var xl in xlDic)
+            {
+                List<string> alpha_ptns = new List<string>();
+                List<string> beta_ptns = new List<string>();
+                List<string> alpha_genes = new List<string>();
+                List<string> beta_genes = new List<string>();
+                xl.csms.ForEach(a =>
+                {
+                    alpha_ptns.AddRange(a.proteins_alpha);
+                    beta_ptns.AddRange(a.proteins_beta);
+                    alpha_genes.AddRange(a.genes_alpha);
+                    beta_genes.AddRange(a.genes_beta);
+                }
+                );
+
+                CSMSearchResult xlSr = new CSMSearchResult(xl.csms[0]._index, xl.csms[0].fileIndex, xl.csms[0].scanNumber, xl.csms[0].charge, xl.csms[0].precursor_mass, xl.csms[0].peptide_alpha, xl.csms[0].peptide_beta, xl.csms[0].pos_alpha, xl.csms[0].pos_beta, alpha_ptns.Distinct().ToList(), beta_ptns.Distinct().ToList(), xl.csms[0].peptide_alpha_mass, xl.csms[0].peptide_beta_mass, xl.csms[0].peptide_alpha_score, xl.csms[0].peptide_beta_score, alpha_genes.Distinct().ToList(), beta_genes.Distinct().ToList());
+                xlSr.quantitation = xl.csms[0].quantitation;
+
+                if (xl.csms.Count > 1)
+                {
+                    double[] thisQuantitation = new double[myParams.MarkerMZs.Count];
+
+                    for (int i = 0; i < myParams.MarkerMZs.Count; i++)
+                    {
+                        var orderedQuant = xl.csms.Select(a => a.quantitation[i]).OrderBy(p => p);
+                        int count = orderedQuant.Count();
+                        double median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
+                        median /= 2;
+                        thisQuantitation[i] = median;
+                    }
+                    xlSr.quantitation = thisQuantitation.ToList();
+                }
+
+                resultsPackage.XLSearchResults.Add(xlSr);
+
+                lock (progress_lock)
+                {
+                    xl_processed++;
+                    int new_progress = (int)((double)xl_processed / (qtdXL) * 100);
+                    if (new_progress > old_progress)
+                    {
+                        old_progress = new_progress;
+
+                        if (stdOut_console)
+                        {
+                            int currentLineCursor = Console.CursorTop;
+                            Console.SetCursorPosition(0, Console.CursorTop);
+                            Console.Write("XL Quantitation progress: " + old_progress + "%");
+                            Console.SetCursorPosition(0, currentLineCursor);
+
+                        }
+                        else
+                        {
+                            Console.Write("XL Quantitation progress: " + old_progress + "%");
+                        }
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Method responsible for setting the normalization dictionary with the channels (reporter ions) of all spectra
@@ -112,20 +260,34 @@ namespace IsobaricAnalyzer
                 rawFiles = folder.GetFiles("*.raw", SearchOption.AllDirectories).ToList();
             }
 
-            csmSpectra = new List<MSUltraLight>();
+            resultsPackage.Spectra = new List<MSUltraLight>();
             foreach (FileInfo rawFile in rawFiles)
             {
                 Console.WriteLine("Extracting data for " + rawFile.Name);
 
                 string current_fileNme = rawFile.Name.Substring(0, rawFile.Name.Length - rawFile.Extension.Length);
-                int rawFileIndex = rawfileIndex.IndexOf(current_fileNme);
+                int rawFileIndex = resultsPackage.FileNameIndex.IndexOf(current_fileNme);
 
-                List<MSUltraLight> spectraFromAThermoFile = ParserUltraLightRawFlash.Parse(rawFile.FullName, 2, (short)rawFileIndex, false, null, stdOut_console);
+                List<MSUltraLight> spectraFromAThermoFile = (from ms in PatternTools.MSParserLight.ParserUltraLightRawFlash.Parse(rawFile.FullName, 2, (short)rawFileIndex, false, null, stdOut_console).AsParallel()
+                                                             select new MSUltraLight()
+                                                             {
+                                                                 ActivationType = ms.ActivationType,
+                                                                 CromatographyRetentionTime = ms.CromatographyRetentionTime,
+                                                                 FileNameIndex = ms.FileNameIndex,
+                                                                 InstrumentType = ms.InstrumentType,
+                                                                 Ions = (from ion in ms.Ions.AsParallel()
+                                                                         select Tuple.Create(ion.Item1, ion.Item2)).ToList(),
+                                                                 MSLevel = ms.MSLevel,
+                                                                 Precursors = (from ion in ms.Precursors.AsParallel()
+                                                                               select Tuple.Create(ion.Item1, ion.Item2)).ToList(),
+
+                                                                 ScanNumber = ms.ScanNumber,
+                                                             }).ToList();
                 spectraFromAThermoFile.RemoveAll(a => a.Ions == null);
 
                 double[] totalSignal = new double[myParams.MarkerMZs.Count];
 
-                Console.WriteLine("Computing quantitation...");
+                Console.WriteLine("Computing CSM quantitation...");
 
                 object progress_lock = new object();
                 int spectra_processed = 0;
@@ -135,7 +297,7 @@ namespace IsobaricAnalyzer
                 //Get info for total signal normalization
                 foreach (MSUltraLight ms in spectraFromAThermoFile)
                 {
-                    double[] thisQuantitation = GetIsobaricSignal(ms.Ions.Where(a => a.MZ < 200).ToList(), myParams.MarkerMZs);
+                    double[] thisQuantitation = GetIsobaricSignal(ms.Ions.Where(a => a.Item1 < 200).ToList(), myParams.MarkerMZs);
                     double maxSignal = thisQuantitation.Max();
 
                     // If a signal is less than the percentage specified in the ion threshold it should become 0.  
@@ -160,11 +322,11 @@ namespace IsobaricAnalyzer
 
                     if (rawFileIndex != -1)
                     {
-                        CSMSearchResult cSMSearchResult = myCSMs.Where(a => a.scanNumber == ms.ScanNumber && a.fileIndex == rawFileIndex).FirstOrDefault();
+                        CSMSearchResult cSMSearchResult = resultsPackage.CSMSearchResults.Where(a => a.scanNumber == ms.ScanNumber && a.fileIndex == rawFileIndex).FirstOrDefault();
                         if (cSMSearchResult != null)
                         {
                             cSMSearchResult.quantitation = thisQuantitation.ToList();
-                            csmSpectra.Add(ms);
+                            resultsPackage.Spectra.Add(ms);
                         }
                     }
 
@@ -180,13 +342,13 @@ namespace IsobaricAnalyzer
                             {
                                 int currentLineCursor = Console.CursorTop;
                                 Console.SetCursorPosition(0, Console.CursorTop);
-                                Console.Write("Quantitation progress: " + old_progress + "%");
+                                Console.Write("CSM Quantitation progress: " + old_progress + "%");
                                 Console.SetCursorPosition(0, currentLineCursor);
 
                             }
                             else
                             {
-                                Console.Write("Quantitation progress: " + old_progress + "%");
+                                Console.Write("CSM Quantitation progress: " + old_progress + "%");
                             }
                         }
                     }
@@ -299,14 +461,14 @@ namespace IsobaricAnalyzer
         {
             if (myParams.NormalizationIdentifiedSpectra || myParams.NormalizationAllSpectra)
             {
-                if (myCSMs == null)
+                if (resultsPackage == null || resultsPackage.CSMSearchResults == null)
                     throw new Exception("There is no spectra to be quantified.");
 
-                Console.WriteLine("Performing signal normalization taking into account " + myCSMs.Count + " scans.");
+                Console.WriteLine("Performing signal normalization taking into account " + resultsPackage.CSMSearchResults.Count + " scans.");
 
-                foreach (CSMSearchResult csm in myCSMs)
+                foreach (CSMSearchResult csm in resultsPackage.CSMSearchResults)
                 {
-                    string fileName = rawfileIndex[csm.fileIndex];
+                    string fileName = resultsPackage.FileNameIndex[csm.fileIndex];
 
                     for (int m = 0; m < myParams.MarkerMZs.Count; m++)
                     {
@@ -336,13 +498,13 @@ namespace IsobaricAnalyzer
         /// <param name="theIons"></param>
         /// <param name="isoMasses"></param>
         /// <returns></returns>
-        private double[] GetIsobaricSignal(List<(double, double)> theIons, List<double> isoMasses)
+        private double[] GetIsobaricSignal(List<Tuple<double, double>> theIons, List<double> isoMasses)
         {
             double[] sig = new double[isoMasses.Count];
 
             for (int i = 0; i < sig.Length; i++)
             {
-                List<(double, double)> acceptableIons = theIons.FindAll(a => Math.Abs(PatternTools.pTools.PPM(a.Item1, isoMasses[i])) < myParams.MarkerPPMTolerance);
+                List<Tuple<double, double>> acceptableIons = theIons.FindAll(a => Math.Abs(PatternTools.pTools.PPM(a.Item1, isoMasses[i])) < myParams.MarkerPPMTolerance);
 
                 double sum = 0;
                 if (acceptableIons.Count > 0)

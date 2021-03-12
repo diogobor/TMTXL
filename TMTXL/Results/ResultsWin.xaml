@@ -11,12 +11,16 @@
             <Menu DockPanel.Dock="Top">
                 <MenuItem Header="_File">
                     <!--<MenuItem Header="_New" />-->
-                    <MenuItem Header="_Open results" >
+                    <MenuItem Header="_Open results" Click="MenuItemLoad_Click" >
                         <MenuItem.Icon>
                             <Image Source="/load.jpg" />
                         </MenuItem.Icon>
                     </MenuItem>
-                    <!--<MenuItem Header="_Save" />-->
+                    <MenuItem Header="_Save" Click="MenuItemSave_Click">
+                        <MenuItem.Icon>
+                            <Image Source="/Results/Save-icon.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
                     <Separator />
                     <MenuItem Header="_Exit" Click="MenuItemExit_Click">
                         <MenuItem.Icon>
@@ -34,9 +38,20 @@
                     <TextBlock FontWeight="Bold">Results</TextBlock>
                 </StackPanel>
             </GroupBox.Header>
-            <StackPanel Orientation="Vertical">
-                <DataGrid MouseDoubleClick="results_datagrid_MouseDoubleClick" x:Name="results_datagrid" Height="330" Width="700" HorizontalAlignment="Left" Margin="0,0,0,0"></DataGrid>
-            </StackPanel>
+                <TabControl x:Name="tabControl" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <TabItem Header="Protein-protein interaction" x:Name="TabItemPPI">
+                        <DataGrid x:Name="ppi_results_datagrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+                    </TabItem>
+                    <TabItem Header="Residues" x:Name="TabItemResidues">
+                        <DataGrid x:Name="residues_results_datagrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+                    </TabItem>
+                    <TabItem Header="Cross-linked Peptides" x:Name="TabItemXLPeptides">
+                        <DataGrid x:Name="xl_results_datagrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+                    </TabItem>
+                    <TabItem Header="CSMs" x:Name="TabItemCSMs">
+                        <DataGrid MouseDoubleClick="csm_results_datagrid_MouseDoubleClick" x:Name="csm_results_datagrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" />
+                    </TabItem>
+                </TabControl>
         </GroupBox>
 
     </Grid>

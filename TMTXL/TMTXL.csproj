@@ -15,10 +15,13 @@
     <None Remove="goBtn.png" />
     <None Remove="load.jpg" />
     <None Remove="RAW.png" />
+    <None Remove="report.jpg" />
+    <None Remove="Results\Save-icon.png" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="OxyPlot.Wpf" Version="2.1.0-Preview1" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0-preview.1.21102.12" />
     <PackageReference Include="ThermoFisher.CommonCore.BackgroundSubtraction" Version="5.0.0.38" />
     <PackageReference Include="ThermoFisher.CommonCore.Data" Version="5.0.0.38" />
     <PackageReference Include="ThermoFisher.CommonCore.MassPrecisionEstimator" Version="5.0.0.38" />
@@ -64,6 +67,8 @@
     <Resource Include="exit.ico" />
     <Resource Include="goBtn.png" />
     <Resource Include="load.jpg" />
+    <Resource Include="report.jpg" />
+    <Resource Include="Results\Save-icon.png" />
   </ItemGroup>
 
 </Project>

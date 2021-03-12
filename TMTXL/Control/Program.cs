@@ -1,5 +1,4 @@
 ﻿using IsobaricAnalyzer;
-using PatternTools.MSParserLight;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -25,9 +24,7 @@ namespace TMTXL.Control
         public bool ErrorProcessing;
         public string FinalTime { get; set; }
 
-        public List<CSMSearchResult> csmSearchResults { get; set; }
-        public List<MSUltraLight> csmSpectra { get; set; }
-        public List<string> rawFileIndex { get; set; }
+        public ResultsPackage resultsPackage { get; set; }
 
         [STAThread]
         public static void Main()
@@ -120,16 +117,14 @@ namespace TMTXL.Control
             Console.WriteLine("                                                Engineered by The Liu Lab             ");
             Console.WriteLine("#################################################################");
 
-            string[] filesRAWthermo = null;
-            List<FileInfo> xlinkFiles = null;
-
-            List<string> MySpectraFileIndex = new List<string>();
+            List<FileInfo> xlinkCSMFiles = null;
+            List<FileInfo> xlinkPPIFiles = null;
 
             try
             {
-                filesRAWthermo = Directory.GetFiles(programParams.RawFilesDir, "*.*", SearchOption.AllDirectories).Where(file => file.ToLower().EndsWith(".raw") || file.ToLower().EndsWith(".mzml") || file.ToLower().EndsWith(".mzxml")).ToArray();
-                DirectoryInfo folder = new DirectoryInfo(programParams.RawFilesDir);
-                xlinkFiles = folder.GetFiles("*_tm.csv", SearchOption.AllDirectories).ToList();
+                DirectoryInfo folder = new DirectoryInfo(programParams.IDdir);
+                xlinkCSMFiles = folder.GetFiles("*_tm.csv", SearchOption.AllDirectories).ToList();
+                xlinkPPIFiles = folder.GetFiles("*.csv", SearchOption.AllDirectories).ToList();
 
             }
             catch (Exception e)
@@ -144,17 +139,30 @@ namespace TMTXL.Control
                 return;
             }
 
-            csmSearchResults = new List<CSMSearchResult>();
-            List<string> MyFileNameIndex = new List<string>();
-            for (int i = 0; i < xlinkFiles.Count; i++)
+            resultsPackage = new ResultsPackage();
+
+            for (int i = 0; i < xlinkCSMFiles.Count; i++)
             {
                 try
                 {
-                    Console.WriteLine("Reading XlinkX data: " + xlinkFiles[i].FullName);
+                    Console.WriteLine("Reading XlinkX CSM data: " + xlinkCSMFiles[i].FullName);
                     //Get RAW fie name
-                    string[] cols = xlinkFiles[i].DirectoryName.Split("\\");
-                    MyFileNameIndex.Add(cols[cols.Length - 1]);
-                    csmSearchResults.AddRange(ParserXlinkX.Parse(xlinkFiles[i].FullName, (short)i));
+                    string[] cols = xlinkCSMFiles[i].DirectoryName.Split("\\");
+                    resultsPackage.FileNameIndex.Add(cols[cols.Length - 1]);
+                    resultsPackage.CSMSearchResults.AddRange(ParserXlinkX.ParseCSMs(xlinkCSMFiles[i].FullName, (short)i));
+                }
+                catch (Exception ex)
+                {
+                    ErrorProcessing = true;
+                }
+            }
+
+            for (int i = 0; i < xlinkPPIFiles.Count; i++)
+            {
+                try
+                {
+                    resultsPackage.PPIResults.AddRange(ParserXlinkX.ParsePPI(xlinkPPIFiles[i].FullName));
+                    ErrorProcessing = false;
                 }
                 catch (Exception ex)
                 {
@@ -164,8 +172,7 @@ namespace TMTXL.Control
 
             IsobaricAnalyzerControl isobaricAnalyzerControl = new IsobaricAnalyzerControl();
             isobaricAnalyzerControl.stdOut_console = false;
-            isobaricAnalyzerControl.myCSMs = csmSearchResults;
-            isobaricAnalyzerControl.rawfileIndex = MyFileNameIndex;
+            isobaricAnalyzerControl.resultsPackage = resultsPackage;
 
             #region set params
             isobaricAnalyzerControl.myParams = setIsobaricAnalyzerParams();
@@ -183,9 +190,6 @@ namespace TMTXL.Control
                 #endregion
 
                 isobaricAnalyzerControl.computeQuantitation();
-                csmSpectra = isobaricAnalyzerControl.csmSpectra;
-                rawFileIndex = isobaricAnalyzerControl.rawfileIndex;
-
             }
             catch (Exception exc)
             {

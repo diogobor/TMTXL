@@ -2,23 +2,13 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Forms;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using TMTXL.Control;
 using TMTXL.Results;
 using TMTXL.Utils;
@@ -43,7 +33,6 @@ namespace TMTXL
 
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
             dispatcherTimer.Interval = new TimeSpan(0, 0, 2);
-
         }
 
         private void dispatcherTimer_Tick(object sender, EventArgs e)
@@ -80,7 +69,7 @@ namespace TMTXL
                     }
 
                     ResultsWin resultsWin = new ResultsWin();
-                    resultsWin.Setup(mainProgramGUI.csmSearchResults, mainProgramGUI.csmSpectra, mainProgramGUI.rawFileIndex);
+                    resultsWin.Setup(mainProgramGUI.resultsPackage);
                     resultsWin.ShowDialog();
                 }
             }
@@ -484,6 +473,40 @@ namespace TMTXL
             }
 
             dataGridPurityCorrections.ItemsSource = new DataView(dt);
+        }
+
+        private void MenuItemResultBrowser_Click(object sender, RoutedEventArgs e)
+        {
+            ResultsWin resultsWin = new ResultsWin();
+            resultsWin.ShowDialog();
+        }
+
+        private void MenuItemLoad_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.FileName = ""; // Default file name
+            dlg.Filter = "TMTXL results (*.tmtxl)|*.tmtxl"; // Filter files by extension
+            dlg.Title = "Load results";
+
+            // Show open file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+            if (result == true)
+            {
+                try
+                {
+                    ResultsPackage resultPackage = new ResultsPackage();
+                    resultPackage = resultPackage.DeserializeResults(dlg.FileName);
+
+                    ResultsWin resultsWin = new ResultsWin();
+                    resultsWin.Setup(resultPackage);
+                    resultsWin.ShowDialog();
+                }
+                catch (Exception exc)
+                {
+                    Console.WriteLine("ERROR: " + exc.Message);
+                    System.Windows.Forms.MessageBox.Show("Failed to load!", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                }
+            }
         }
     }
 }

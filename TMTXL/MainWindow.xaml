@@ -12,7 +12,7 @@
             <Menu DockPanel.Dock="Top">
                 <MenuItem Header="_File">
                     <!--<MenuItem Header="_New" />-->
-                    <MenuItem Header="_Open results" >
+                    <MenuItem Header="_Open results" Click="MenuItemLoad_Click" >
                         <MenuItem.Icon>
                             <Image Source="/load.jpg" />
                         </MenuItem.Icon>
@@ -22,6 +22,15 @@
                     <MenuItem Header="_Exit" Click="MenuItemExit_Click">
                         <MenuItem.Icon>
                             <Image Source="/exit.ico" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+
+                <MenuItem Header="_Utils">
+                    <!--<MenuItem Header="_New" />-->
+                    <MenuItem Header="_Result Browser" Click="MenuItemResultBrowser_Click">
+                        <MenuItem.Icon>
+                            <Image Source="/report.jpg" />
                         </MenuItem.Icon>
                     </MenuItem>
                 </MenuItem>
