@@ -84,11 +84,14 @@ namespace IsobaricAnalyzer
 
             #endregion
 
-            //compute the normalization for each spectrum
-            this.computeQuantNormalization();
+            //compute the quantitation for each spectrum
+            this.computeCSMQuant();
 
             //compute the quantitation of all xls
             this.computeXLQuantitation();
+
+            //compute the quantitation of all xls with the same reaction site position
+            this.computeResidueQuantitation();
 
             //compute the quantitation of all genes
             this.computePPIQuantitation();
@@ -107,26 +110,53 @@ namespace IsobaricAnalyzer
 
             foreach (ProteinProteinInteraction ppi in resultsPackage.PPIResults)
             {
-                double[] thisQuantitation = new double[myParams.MarkerMZs.Count];
-                List<CSMSearchResult> xl_results = resultsPackage.XLSearchResults.Where(a => a.genes_alpha.Contains(ppi.gene_a) && a.genes_beta.Contains(ppi.gene_b)).ToList();
+                //double[] thisQuantitation = new double[myParams.MarkerMZs.Count];
 
-                if (xl_results.Count > 0)
+                var xlDic = from csm in resultsPackage.CSMSearchResults.Where(a => a.genes_alpha.Contains(ppi.gene_a) && a.genes_beta.Contains(ppi.gene_b))
+                            group csm by new
+                            {
+                                csm.alpha_peptide,
+                                csm.beta_peptide,
+                                csm.alpha_pept_xl_pos,
+                                csm.beta_pept_xl_pos
+                            }
+                         into groupedSeq
+                            select new { xl = groupedSeq.Key, csms = groupedSeq.ToList() };
+
+                foreach (var xl in xlDic)
                 {
-                    if (xl_results.Count > 1)
+                    ppi.specCount = xl.csms.Count;
+                    ppi.log2FoldChange = xl.csms[0].log2FoldChange;
+                    ppi.pValue = xl.csms[0].pValue;
+
+                    if (xl.csms.Count > 1)
                     {
-                        for (int i = 0; i < myParams.MarkerMZs.Count; i++)
-                        {
-                            var orderedQuant = xl_results.Select(a => a.quantitation[i]).OrderBy(p => p);
-                            int count = orderedQuant.Count();
-                            double median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
-                            median /= 2;
-                            thisQuantitation[i] = median;
-                        }
+                        var folds = xl.csms.Select(a => a.log2FoldChange).ToList();
+                        ppi.log2FoldChange = folds.Average();
+                        ppi.pValue = folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xl.csms[0].pValue;
                     }
-                    else
-                        ppi.quantitation = xl_results[0].quantitation;
                 }
-                ppi.quantitation = thisQuantitation.ToList();
+
+
+                //List<CSMSearchResult> csm_results = resultsPackage.CSMSearchResults.Where(a => a.genes_alpha.Contains(ppi.gene_a) && a.genes_beta.Contains(ppi.gene_b)).ToList();
+
+                //if (csm_results.Count > 0)
+                //{
+                //    if (csm_results.Count > 1)
+                //    {
+                //        for (int i = 0; i < myParams.MarkerMZs.Count; i++)
+                //        {
+                //            var orderedQuant = csm_results.Select(a => a.quantitation[i]).OrderBy(p => p);
+                //            int count = orderedQuant.Count();
+                //            double median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
+                //            median /= 2;
+                //            thisQuantitation[i] = median;
+                //        }
+                //    }
+                //    else
+                //        ppi.quantitation = csm_results[0].quantitation;
+                //}
+                //ppi.quantitation = thisQuantitation.ToList();
 
                 lock (progress_lock)
                 {
@@ -140,13 +170,91 @@ namespace IsobaricAnalyzer
                         {
                             int currentLineCursor = Console.CursorTop;
                             Console.SetCursorPosition(0, Console.CursorTop);
-                            Console.Write("XL Quantitation progress: " + old_progress + "%");
+                            Console.Write("PPI Quantitation progress: " + old_progress + "%");
                             Console.SetCursorPosition(0, currentLineCursor);
 
                         }
                         else
                         {
-                            Console.Write("XL Quantitation progress: " + old_progress + "%");
+                            Console.Write("PPI Quantitation progress: " + old_progress + "%");
+                        }
+                    }
+                }
+            }
+        }
+
+        private void computeResidueQuantitation()
+        {
+            if (resultsPackage == null || resultsPackage.CSMSearchResults == null || resultsPackage.CSMSearchResults.Count == 0) return;
+
+            Console.WriteLine("Computing Residues quantitation...");
+
+            var residueDic = from csm in resultsPackage.CSMSearchResults
+                             group csm by new
+                             {
+                                 ptn_a = csm.proteins_alpha.ToList<string>()[0],
+                                 ptn_b = csm.proteins_beta.ToList<string>()[0],
+                                 csm.alpha_pept_xl_pos,
+                                 csm.beta_pept_xl_pos
+                             }
+                         into groupedSeq
+                             select new { xl = groupedSeq.Key, csms = groupedSeq.ToList() };
+
+
+            object progress_lock = new object();
+            int xl_processed = 0;
+            int old_progress = 0;
+            double qtdXL = residueDic.Count();
+
+            foreach (var xl in residueDic)
+            {
+                List<string> alpha_ptns = new List<string>();
+                List<string> beta_ptns = new List<string>();
+                List<string> alpha_genes = new List<string>();
+                List<string> beta_genes = new List<string>();
+                xl.csms.ForEach(a =>
+                {
+                    alpha_ptns.AddRange(a.proteins_alpha);
+                    beta_ptns.AddRange(a.proteins_beta);
+                    alpha_genes.AddRange(a.genes_alpha);
+                    beta_genes.AddRange(a.genes_beta);
+                }
+                );
+
+                CSMSearchResult residueSr = new CSMSearchResult(xl.csms[0]._index, xl.csms[0].fileIndex, xl.csms[0].scanNumber, xl.csms[0].charge, xl.csms[0].precursor_mass, xl.csms[0].alpha_peptide, xl.csms[0].beta_peptide, xl.csms[0].alpha_pos_xl, xl.csms[0].beta_pos_xl, xl.csms[0].alpha_pept_xl_pos, xl.csms[0].beta_pept_xl_pos, alpha_ptns.Distinct().ToList(), beta_ptns.Distinct().ToList(), xl.csms[0].peptide_alpha_mass, xl.csms[0].peptide_beta_mass, xl.csms[0].peptide_alpha_score, xl.csms[0].peptide_beta_score, alpha_genes.Distinct().ToList(), beta_genes.Distinct().ToList());
+                residueSr.quantitation = xl.csms[0].quantitation;
+                residueSr.specCount = xl.csms.Count;
+                residueSr.log2FoldChange = xl.csms[0].log2FoldChange;
+                residueSr.pValue = xl.csms[0].pValue;
+
+                if (xl.csms.Count > 1)
+                {
+                    var folds = xl.csms.Select(a => a.log2FoldChange).ToList();
+                    residueSr.log2FoldChange = folds.Average();
+                    residueSr.pValue = folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xl.csms[0].pValue;
+                }
+
+                resultsPackage.ResidueSearchResults.Add(residueSr);
+
+                lock (progress_lock)
+                {
+                    xl_processed++;
+                    int new_progress = (int)((double)xl_processed / (qtdXL) * 100);
+                    if (new_progress > old_progress)
+                    {
+                        old_progress = new_progress;
+
+                        if (stdOut_console)
+                        {
+                            int currentLineCursor = Console.CursorTop;
+                            Console.SetCursorPosition(0, Console.CursorTop);
+                            Console.Write("Residue Quantitation progress: " + old_progress + "%");
+                            Console.SetCursorPosition(0, currentLineCursor);
+
+                        }
+                        else
+                        {
+                            Console.Write("Residue Quantitation progress: " + old_progress + "%");
                         }
                     }
                 }
@@ -162,10 +270,10 @@ namespace IsobaricAnalyzer
             var xlDic = from csm in resultsPackage.CSMSearchResults
                         group csm by new
                         {
-                            csm.peptide_alpha,
-                            csm.peptide_beta,
-                            csm.pos_alpha,
-                            csm.pos_beta
+                            csm.alpha_peptide,
+                            csm.beta_peptide,
+                            csm.alpha_pept_xl_pos,
+                            csm.beta_pept_xl_pos
                         }
                          into groupedSeq
                         select new { xl = groupedSeq.Key, csms = groupedSeq.ToList() };
@@ -192,22 +300,29 @@ namespace IsobaricAnalyzer
                 }
                 );
 
-                CSMSearchResult xlSr = new CSMSearchResult(xl.csms[0]._index, xl.csms[0].fileIndex, xl.csms[0].scanNumber, xl.csms[0].charge, xl.csms[0].precursor_mass, xl.csms[0].peptide_alpha, xl.csms[0].peptide_beta, xl.csms[0].pos_alpha, xl.csms[0].pos_beta, alpha_ptns.Distinct().ToList(), beta_ptns.Distinct().ToList(), xl.csms[0].peptide_alpha_mass, xl.csms[0].peptide_beta_mass, xl.csms[0].peptide_alpha_score, xl.csms[0].peptide_beta_score, alpha_genes.Distinct().ToList(), beta_genes.Distinct().ToList());
+                CSMSearchResult xlSr = new CSMSearchResult(xl.csms[0]._index, xl.csms[0].fileIndex, xl.csms[0].scanNumber, xl.csms[0].charge, xl.csms[0].precursor_mass, xl.csms[0].alpha_peptide, xl.csms[0].beta_peptide, xl.csms[0].alpha_pos_xl, xl.csms[0].beta_pos_xl, xl.csms[0].alpha_pept_xl_pos, xl.csms[0].beta_pept_xl_pos, alpha_ptns.Distinct().ToList(), beta_ptns.Distinct().ToList(), xl.csms[0].peptide_alpha_mass, xl.csms[0].peptide_beta_mass, xl.csms[0].peptide_alpha_score, xl.csms[0].peptide_beta_score, alpha_genes.Distinct().ToList(), beta_genes.Distinct().ToList());
                 xlSr.quantitation = xl.csms[0].quantitation;
+                xlSr.specCount = xl.csms.Count;
+                xlSr.log2FoldChange = xl.csms[0].log2FoldChange;
+                xlSr.pValue = xl.csms[0].pValue;
 
                 if (xl.csms.Count > 1)
                 {
-                    double[] thisQuantitation = new double[myParams.MarkerMZs.Count];
+                    //double[] thisQuantitation = new double[myParams.MarkerMZs.Count];
 
-                    for (int i = 0; i < myParams.MarkerMZs.Count; i++)
-                    {
-                        var orderedQuant = xl.csms.Select(a => a.quantitation[i]).OrderBy(p => p);
-                        int count = orderedQuant.Count();
-                        double median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
-                        median /= 2;
-                        thisQuantitation[i] = median;
-                    }
-                    xlSr.quantitation = thisQuantitation.ToList();
+                    //for (int i = 0; i < myParams.MarkerMZs.Count; i++)
+                    //{
+                    //    var orderedQuant = xl.csms.Select(a => a.quantitation[i]).OrderBy(p => p);
+                    //    int count = orderedQuant.Count();
+                    //    double median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
+                    //    median /= 2;
+                    //    thisQuantitation[i] = median;
+                    //}
+                    //xlSr.quantitation = thisQuantitation.ToList();
+
+                    var folds = xl.csms.Select(a => a.log2FoldChange).ToList();
+                    xlSr.log2FoldChange = folds.Average();
+                    xlSr.pValue = folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xl.csms[0].pValue;
                 }
 
                 resultsPackage.XLSearchResults.Add(xlSr);
@@ -235,6 +350,47 @@ namespace IsobaricAnalyzer
                     }
                 }
             }
+        }
+        private void computeCSMQuant()
+        {
+            //input - class labels
+            List<int> classLabelList = new() { 1, 1, 1, 1, 1, 2, 2, 2, 2, 2 };//make this global
+
+            if (resultsPackage == null || resultsPackage.CSMSearchResults == null)
+                throw new Exception("There is no spectra to be quantified.");
+
+            Console.WriteLine("Performing quantitation taking into account " + resultsPackage.CSMSearchResults.Count + " scans.");
+
+            foreach (CSMSearchResult csm in resultsPackage.CSMSearchResults)
+            {
+                string fileName = resultsPackage.FileNameIndex[csm.fileIndex];
+
+                for (int m = 0; m < myParams.MarkerMZs.Count; m++)
+                {
+                    if (myParams.NormalizationIdentifiedSpectra)
+                    {
+                        csm.quantitation[m] /= signalIdentifiedNormalizationDictionary[fileName][m];
+                    }
+                    else if (myParams.NormalizationAllSpectra)
+                    {
+                        csm.quantitation[m] /= signalAllNormalizationDictionary[fileName][m];
+                    }
+                }
+
+                if (csm.quantitation.Contains(double.NaN))
+                {
+                    Console.WriteLine("ERROR: Problems on signal of scan " + fileName + "\tScan No:" + csm.scanNumber);
+                }
+                else
+                {
+                    csm.avg_notNull_1 = IsobaricUtils.computeAVG(csm.quantitation, 1, classLabelList);
+                    csm.avg_notNull_2 = IsobaricUtils.computeAVG(csm.quantitation, 2, classLabelList);
+                    csm.log2FoldChange = Math.Log2(csm.avg_notNull_1 / csm.avg_notNull_2);
+                    csm.pValue = IsobaricUtils.computeTtest(csm.quantitation);
+                }
+            }
+
+            Console.WriteLine("Done!");
         }
 
         /// <summary>
@@ -457,40 +613,6 @@ namespace IsobaricAnalyzer
         /// <summary>
         /// Method responsible for applying the normalization (by taking into account all or only identified spectra) to the quantitation values
         /// </summary>
-        private void computeQuantNormalization()
-        {
-            if (myParams.NormalizationIdentifiedSpectra || myParams.NormalizationAllSpectra)
-            {
-                if (resultsPackage == null || resultsPackage.CSMSearchResults == null)
-                    throw new Exception("There is no spectra to be quantified.");
-
-                Console.WriteLine("Performing signal normalization taking into account " + resultsPackage.CSMSearchResults.Count + " scans.");
-
-                foreach (CSMSearchResult csm in resultsPackage.CSMSearchResults)
-                {
-                    string fileName = resultsPackage.FileNameIndex[csm.fileIndex];
-
-                    for (int m = 0; m < myParams.MarkerMZs.Count; m++)
-                    {
-                        if (myParams.NormalizationIdentifiedSpectra)
-                        {
-                            csm.quantitation[m] /= signalIdentifiedNormalizationDictionary[fileName][m];
-                        }
-                        else
-                        {
-                            csm.quantitation[m] /= signalAllNormalizationDictionary[fileName][m];
-                        }
-                    }
-
-                    if (csm.quantitation.Contains(double.NaN))
-                    {
-                        Console.WriteLine("Problems on signal of scan " + fileName + "\tScan No:" + csm.scanNumber);
-                    }
-                }
-
-                Console.WriteLine("Done!");
-            }
-        }
 
         /// <summary>
         /// Method responsible for getting the isobaric signal

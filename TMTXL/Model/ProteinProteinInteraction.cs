@@ -37,6 +37,12 @@ namespace TMTXL.Model
         public int totalCSM { get; set; }
         [ProtoMember(9)]
         public int uniqueCSM { get; set; }
+        [ProtoMember(10)]
+        public int specCount;
+        [ProtoMember(11)]
+        public double log2FoldChange;
+        [ProtoMember(12)]
+        public double pValue;
 
         /// <summary>
         /// Constructor

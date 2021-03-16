@@ -45,10 +45,10 @@
                     <TabItem Header="Residues" x:Name="TabItemResidues">
                         <DataGrid x:Name="residues_results_datagrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
                     </TabItem>
-                    <TabItem Header="Cross-linked Peptides" x:Name="TabItemXLPeptides">
-                        <DataGrid x:Name="xl_results_datagrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
-                    </TabItem>
-                    <TabItem Header="CSMs" x:Name="TabItemCSMs">
+                <TabItem Header="Cross-linked Peptides" x:Name="TabItemXLPeptides">
+                    <DataGrid x:Name="xl_results_datagrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+                </TabItem>
+                <TabItem Header="CSMs" x:Name="TabItemCSMs">
                         <DataGrid MouseDoubleClick="csm_results_datagrid_MouseDoubleClick" x:Name="csm_results_datagrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" />
                     </TabItem>
                 </TabControl>

@@ -24,8 +24,10 @@ namespace TMTXL.Parser
         private static double precursor_mass { get; set; }
         private static string peptide_alpha { get; set; }
         private static string peptide_beta { get; set; }
-        private static short pos_alpha { get; set; }
-        private static short pos_beta { get; set; }
+        private static short pep_alpha_pos { get; set; }
+        private static short ptn_alpha_pos { get; set; }
+        private static short pep_beta_pos { get; set; }
+        private static short ptn_beta_pos { get; set; }
         private static string protein_alpha { get; set; }
         private static string protein_beta { get; set; }
         private static double peptide_alpha_mass { get; set; }
@@ -178,7 +180,11 @@ namespace TMTXL.Parser
 
             index = Array.IndexOf(HeaderLineCSM, "xl_a");
             if (index == -1) return;
-            pos_alpha = Convert.ToInt16(cols[index]);
+            pep_alpha_pos = Convert.ToInt16(cols[index]);
+
+            index = Array.IndexOf(HeaderLineCSM, "pep_pos_a");
+            if (index == -1) return;
+            ptn_alpha_pos = (short)(Convert.ToInt16(cols[index]) + pep_alpha_pos);
 
             index = Array.IndexOf(HeaderLineCSM, "protein_a");
             if (index == -1) return;
@@ -198,7 +204,11 @@ namespace TMTXL.Parser
 
             index = Array.IndexOf(HeaderLineCSM, "xl_b");
             if (index == -1) return;
-            pos_beta = Convert.ToInt16(cols[index]);
+            pep_beta_pos = Convert.ToInt16(cols[index]);
+
+            index = Array.IndexOf(HeaderLineCSM, "pep_pos_b");
+            if (index == -1) return;
+            ptn_beta_pos = (short)(Convert.ToInt16(cols[index]) + pep_beta_pos);
 
             index = Array.IndexOf(HeaderLineCSM, "protein_b");
             if (index == -1) return;
@@ -225,7 +235,7 @@ namespace TMTXL.Parser
             if (_gene_beta_index != -1)
                 gene_beta = Regex.Split(gene_beta_cols[_gene_beta_index], "GN=")[1];
 
-            current_csm = new CSMSearchResult(_index, fileIndex, scanNumber, charge, precursor_mass, peptide_alpha, peptide_beta, pos_alpha, pos_beta, new List<string>() { protein_alpha }, new List<string>() { protein_beta }, peptide_alpha_mass, peptide_beta_mass, peptide_alpha_score, peptide_beta_score, new List<string>() { gene_alpha }, new List<string>() { gene_beta });
+            current_csm = new CSMSearchResult(_index, fileIndex, scanNumber, charge, precursor_mass, peptide_alpha, peptide_beta, pep_alpha_pos, pep_beta_pos, ptn_alpha_pos, ptn_beta_pos, new List<string>() { protein_alpha }, new List<string>() { protein_beta }, peptide_alpha_mass, peptide_beta_mass, peptide_alpha_score, peptide_beta_score, new List<string>() { gene_alpha }, new List<string>() { gene_beta });
         }
         public static List<ProteinProteinInteraction> ParsePPI(string fileName)
         {

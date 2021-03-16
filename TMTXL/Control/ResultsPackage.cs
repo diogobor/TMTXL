@@ -19,12 +19,14 @@ namespace TMTXL.Control
         [ProtoMember(2)]
         public List<CSMSearchResult> XLSearchResults;
         [ProtoMember(3)]
-        public List<MSUltraLight> Spectra;
+        public List<CSMSearchResult> ResidueSearchResults;
         [ProtoMember(4)]
-        public List<string> FileNameIndex;
+        public List<MSUltraLight> Spectra;
         [ProtoMember(5)]
+        public List<string> FileNameIndex;
+        [ProtoMember(6)]
         public List<ProteinProteinInteraction> PPIResults;
-
+        
 
         /// <summary>
         /// Empty constructor
@@ -33,15 +35,17 @@ namespace TMTXL.Control
         {
             CSMSearchResults = new List<CSMSearchResult>();
             XLSearchResults = new List<CSMSearchResult>();
+            ResidueSearchResults = new List<CSMSearchResult>();
             Spectra = new List<MSUltraLight>();
             FileNameIndex = new List<string>();
             PPIResults = new List<ProteinProteinInteraction>();
         }
 
-        public ResultsPackage(List<CSMSearchResult> cSMSearchResults, List<CSMSearchResult> xlSearchResults, List<MSUltraLight> spectra, List<string> fileNameIndex, List<ProteinProteinInteraction> pPIResults)
+        public ResultsPackage(List<CSMSearchResult> cSMSearchResults, List<CSMSearchResult> xlSearchResults, List<CSMSearchResult> residueSearchResults, List<MSUltraLight> spectra, List<string> fileNameIndex, List<ProteinProteinInteraction> pPIResults)
         {
             this.CSMSearchResults = cSMSearchResults;
             this.XLSearchResults = xlSearchResults;
+            this.ResidueSearchResults = residueSearchResults;
             this.Spectra = spectra;
             this.FileNameIndex = fileNameIndex;
             this.PPIResults = pPIResults;

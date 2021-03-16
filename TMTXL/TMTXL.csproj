@@ -48,6 +48,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="alglibnet2">
+      <HintPath>libs\alglibnet2.dll</HintPath>
+    </Reference>
     <Reference Include="Ionic.Zip">
       <HintPath>libs\Ionic.Zip.dll</HintPath>
     </Reference>
