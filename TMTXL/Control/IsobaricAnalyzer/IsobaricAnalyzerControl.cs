@@ -110,53 +110,21 @@ namespace IsobaricAnalyzer
 
             foreach (ProteinProteinInteraction ppi in resultsPackage.PPIResults)
             {
-                //double[] thisQuantitation = new double[myParams.MarkerMZs.Count];
+                List<CSMSearchResult> xlDic = resultsPackage.CSMSearchResults.Where(a => a.genes_alpha.Contains(ppi.gene_a) && a.genes_beta.Contains(ppi.gene_b)).ToList();
 
-                var xlDic = from csm in resultsPackage.CSMSearchResults.Where(a => a.genes_alpha.Contains(ppi.gene_a) && a.genes_beta.Contains(ppi.gene_b))
-                            group csm by new
-                            {
-                                csm.alpha_peptide,
-                                csm.beta_peptide,
-                                csm.alpha_pept_xl_pos,
-                                csm.beta_pept_xl_pos
-                            }
-                         into groupedSeq
-                            select new { xl = groupedSeq.Key, csms = groupedSeq.ToList() };
-
-                foreach (var xl in xlDic)
+                if (xlDic.Count > 0)
                 {
-                    ppi.specCount = xl.csms.Count;
-                    ppi.log2FoldChange = xl.csms[0].log2FoldChange;
-                    ppi.pValue = xl.csms[0].pValue;
+                    ppi.specCount = xlDic.Count;
+                    ppi.log2FoldChange = xlDic[0].log2FoldChange;
+                    ppi.pValue = xlDic[0].pValue;
 
-                    if (xl.csms.Count > 1)
+                    if (xlDic.Count > 1)
                     {
-                        var folds = xl.csms.Select(a => a.log2FoldChange).ToList();
+                        var folds = xlDic.Select(a => a.log2FoldChange).ToList();
                         ppi.log2FoldChange = folds.Average();
-                        ppi.pValue = folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xl.csms[0].pValue;
+                        ppi.pValue = folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xlDic[0].pValue;
                     }
                 }
-
-
-                //List<CSMSearchResult> csm_results = resultsPackage.CSMSearchResults.Where(a => a.genes_alpha.Contains(ppi.gene_a) && a.genes_beta.Contains(ppi.gene_b)).ToList();
-
-                //if (csm_results.Count > 0)
-                //{
-                //    if (csm_results.Count > 1)
-                //    {
-                //        for (int i = 0; i < myParams.MarkerMZs.Count; i++)
-                //        {
-                //            var orderedQuant = csm_results.Select(a => a.quantitation[i]).OrderBy(p => p);
-                //            int count = orderedQuant.Count();
-                //            double median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
-                //            median /= 2;
-                //            thisQuantitation[i] = median;
-                //        }
-                //    }
-                //    else
-                //        ppi.quantitation = csm_results[0].quantitation;
-                //}
-                //ppi.quantitation = thisQuantitation.ToList();
 
                 lock (progress_lock)
                 {
