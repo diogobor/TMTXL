@@ -46,7 +46,7 @@ namespace IsobaricAnalyzer
                 }
             }
 
-            return thisQuant.Average();
+            return thisQuant.Count > 0 ? thisQuant.Average() : 0;
         }
 
         /// <summary>

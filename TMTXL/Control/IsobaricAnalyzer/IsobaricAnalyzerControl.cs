@@ -120,8 +120,10 @@ namespace IsobaricAnalyzer
 
                     if (xlDic.Count > 1)
                     {
+                        xlDic.RemoveAll(a => double.IsNaN(a.log2FoldChange));
+
                         var folds = xlDic.Select(a => a.log2FoldChange).ToList();
-                        ppi.log2FoldChange = folds.Average();
+                        ppi.log2FoldChange = folds.Count > 0 ? folds.Average() : 0;
                         ppi.pValue = folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xlDic[0].pValue;
                     }
                 }
@@ -197,8 +199,10 @@ namespace IsobaricAnalyzer
 
                 if (xl.csms.Count > 1)
                 {
+                    xl.csms.RemoveAll(a => double.IsNaN(a.log2FoldChange));
+
                     var folds = xl.csms.Select(a => a.log2FoldChange).ToList();
-                    residueSr.log2FoldChange = folds.Average();
+                    residueSr.log2FoldChange = folds.Count > 0 ? folds.Average() : 0;
                     residueSr.pValue = folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xl.csms[0].pValue;
                 }
 
@@ -288,8 +292,10 @@ namespace IsobaricAnalyzer
                     //}
                     //xlSr.quantitation = thisQuantitation.ToList();
 
+                    xl.csms.RemoveAll(a => double.IsNaN(a.log2FoldChange));
+
                     var folds = xl.csms.Select(a => a.log2FoldChange).ToList();
-                    xlSr.log2FoldChange = folds.Average();
+                    xlSr.log2FoldChange = folds.Count > 0 ? folds.Average() : 0;
                     xlSr.pValue = folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xl.csms[0].pValue;
                 }
 
@@ -353,8 +359,8 @@ namespace IsobaricAnalyzer
                 {
                     csm.avg_notNull_1 = IsobaricUtils.computeAVG(csm.quantitation, 1, classLabelList);
                     csm.avg_notNull_2 = IsobaricUtils.computeAVG(csm.quantitation, 2, classLabelList);
-                    csm.log2FoldChange = Math.Log2(csm.avg_notNull_1 / csm.avg_notNull_2);
-                    csm.pValue = IsobaricUtils.computeTtest(csm.quantitation);
+                    csm.log2FoldChange = csm.avg_notNull_2 > 0 ? Math.Log2(csm.avg_notNull_1 / csm.avg_notNull_2) : double.NaN;
+                    csm.pValue = double.IsNaN(csm.log2FoldChange) ? double.NaN : IsobaricUtils.computeTtest(csm.quantitation);
                 }
             }
 
@@ -446,10 +452,20 @@ namespace IsobaricAnalyzer
 
                     if (rawFileIndex != -1)
                     {
-                        CSMSearchResult cSMSearchResult = resultsPackage.CSMSearchResults.Where(a => a.scanNumber == ms.ScanNumber && a.fileIndex == rawFileIndex).FirstOrDefault();
-                        if (cSMSearchResult != null)
+                        List<CSMSearchResult> cSMSearchResults = resultsPackage.CSMSearchResults.Where(a => a.scanNumber == ms.ScanNumber && a.fileIndex == rawFileIndex).ToList();
+                        if (cSMSearchResults != null && cSMSearchResults.Count > 0)
                         {
-                            cSMSearchResult.quantitation = thisQuantitation.ToList();
+                            if (cSMSearchResults.Count == 1)
+                            {
+                                cSMSearchResults[0].quantitation = thisQuantitation.ToList();
+                            }
+                            else
+                            {
+                                foreach (CSMSearchResult csmSr in cSMSearchResults)
+                                {
+                                    csmSr.quantitation = thisQuantitation.ToList();
+                                }
+                            }
                             resultsPackage.Spectra.Add(ms);
                         }
                     }
