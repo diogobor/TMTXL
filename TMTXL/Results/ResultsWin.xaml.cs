@@ -222,6 +222,8 @@ namespace TMTXL.Results
 
         private string GetSelectedValue(DataGrid grid, int columnIndex = 0)
         {
+            if (grid.SelectedCells.Count == 0) return string.Empty;
+
             DataGridCellInfo cellInfo = grid.SelectedCells[columnIndex];
             if (cellInfo == null) return "0";
 
@@ -236,7 +238,10 @@ namespace TMTXL.Results
 
         private void csm_results_datagrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            int scanNumber = Convert.ToInt32(GetSelectedValue(csm_results_datagrid));
+            string getValue = GetSelectedValue(csm_results_datagrid);
+            if (String.IsNullOrEmpty(getValue)) return;
+
+            int scanNumber = Convert.ToInt32(getValue);
 
             CSMSearchResult csm = MyResults.CSMSearchResults.Where(a => a.scanNumber == scanNumber).FirstOrDefault();
 
@@ -330,6 +335,8 @@ namespace TMTXL.Results
         private void xl_results_datagrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             string gene_a = GetSelectedValue(xl_results_datagrid);
+            if (String.IsNullOrEmpty(gene_a)) return;
+
             string gene_b = GetSelectedValue(xl_results_datagrid, 1);
             string alpha_pept = GetSelectedValue(xl_results_datagrid, 2);
             string beta_pept = GetSelectedValue(xl_results_datagrid, 3);
