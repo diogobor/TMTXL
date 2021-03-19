@@ -43,6 +43,8 @@ namespace TMTXL.Model
         public double log2FoldChange;
         [ProtoMember(12)]
         public double pValue;
+        [ProtoMember(13)]
+        public List<CSMSearchResult> cSMs;
 
         /// <summary>
         /// Constructor

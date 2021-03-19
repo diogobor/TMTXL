@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:TMTXL"
         mc:Ignorable="d"
         xmlns:oxy="http://oxyplot.org/wpf"
-        Title="TMT - XL-MS" Height="450" Width="910" WindowStartupLocation="CenterScreen">
+        Title="TMT - XL-MS" Height="450" Width="910" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
     <Grid>
         <DockPanel>
             <Menu DockPanel.Dock="Top">

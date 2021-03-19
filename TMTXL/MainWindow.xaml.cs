@@ -55,6 +55,7 @@ namespace TMTXL
                     results_dir.IsEnabled = true;
                     raw_files_btn.IsEnabled = true;
                     results_btn.IsEnabled = true;
+                    tabControl.IsEnabled = true;
                     #endregion
 
                     run_btn_text.Text = "Run";
@@ -132,6 +133,7 @@ namespace TMTXL
                 results_dir.IsEnabled = false;
                 raw_files_btn.IsEnabled = false;
                 results_btn.IsEnabled = false;
+                tabControl.IsEnabled = false;
                 #endregion
 
                 run_btn_text.Text = "Stop";
@@ -149,6 +151,7 @@ namespace TMTXL
                     results_dir.IsEnabled = true;
                     raw_files_btn.IsEnabled = true;
                     results_btn.IsEnabled = true;
+                    tabControl.IsEnabled = true;
                     #endregion
 
                     run_btn_text.Text = "Run";

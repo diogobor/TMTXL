@@ -1,0 +1,50 @@
+﻿<Window x:Class="TMTXL.Results.ChannelComparison"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:oxy="http://oxyplot.org/wpf"
+        xmlns:local="clr-namespace:TMTXL.Results"
+        mc:Ignorable="d"
+        Title="TMT - XL-MS :: Cross-linked peptides" Height="450" Width="910" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <DockPanel>
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Header="_File">
+                    <!--<MenuItem Header="_New" />-->
+                    
+                    <MenuItem Header="_Exit" Click="MenuItemExit_Click">
+                        <MenuItem.Icon>
+                            <Image Source="/exit.ico" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+            </Menu>
+            <TextBox AcceptsReturn="True" />
+        </DockPanel>
+        
+        <GroupBox Margin="10,20,10,10" Padding="20">
+            <GroupBox.Header>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="cross_linked_peptides_title" FontWeight="Bold">???</TextBlock>
+                </StackPanel>
+            </GroupBox.Header>
+
+            <DataGrid x:Name="channel_datagrid" LoadingRow="channel_datagrid_LoadingRow" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="WhiteSmoke" IsReadOnly="True"/>
+        </GroupBox>
+
+        <oxy:PlotView x:Name="MyPlot" Grid.Row="1" Background="White" >
+            <oxy:PlotView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Save" Click="MenuItemSave_Click"></MenuItem>
+                </ContextMenu>
+            </oxy:PlotView.ContextMenu>
+        </oxy:PlotView>
+
+        <Grid.RowDefinitions>
+            <RowDefinition MaxHeight="200" MinHeight="200" Height="200"/>
+            <RowDefinition Height="300*"/>
+        </Grid.RowDefinitions>
+
+    </Grid>
+</Window>

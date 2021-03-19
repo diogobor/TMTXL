@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TMTXL.Results"
         mc:Ignorable="d"
-        Title="TMT - XL-MS :: Results" Height="450" Width="800" WindowStartupLocation="CenterScreen">
+        Title="TMT - XL-MS :: Results" Height="450" Width="910" WindowStartupLocation="CenterScreen">
     <Grid>
         <DockPanel>
             <Menu DockPanel.Dock="Top">
@@ -38,20 +38,20 @@
                     <TextBlock FontWeight="Bold">Results</TextBlock>
                 </StackPanel>
             </GroupBox.Header>
-                <TabControl x:Name="tabControl" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                    <TabItem Header="Protein-protein interaction" x:Name="TabItemPPI">
-                        <DataGrid x:Name="ppi_results_datagrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
-                    </TabItem>
-                    <TabItem Header="Residues" x:Name="TabItemResidues">
-                        <DataGrid x:Name="residues_results_datagrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
-                    </TabItem>
+            <TabControl x:Name="tabControl" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <TabItem Header="Protein-protein interaction" x:Name="TabItemPPI">
+                    <DataGrid x:Name="ppi_results_datagrid" AlternatingRowBackground="WhiteSmoke" LoadingRow="results_datagrid_LoadingRow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" IsReadOnly="True"/>
+                </TabItem>
+                <TabItem Header="Residues" x:Name="TabItemResidues">
+                    <DataGrid x:Name="residues_results_datagrid" AlternatingRowBackground="WhiteSmoke" LoadingRow="results_datagrid_LoadingRow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" IsReadOnly="True"/>
+                </TabItem>
                 <TabItem Header="Cross-linked Peptides" x:Name="TabItemXLPeptides">
-                    <DataGrid x:Name="xl_results_datagrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0"/>
+                    <DataGrid x:Name="xl_results_datagrid" AlternatingRowBackground="WhiteSmoke" LoadingRow="results_datagrid_LoadingRow" MouseDoubleClick="xl_results_datagrid_MouseDoubleClick" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" IsReadOnly="True"/>
                 </TabItem>
                 <TabItem Header="CSMs" x:Name="TabItemCSMs">
-                        <DataGrid MouseDoubleClick="csm_results_datagrid_MouseDoubleClick" x:Name="csm_results_datagrid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" />
-                    </TabItem>
-                </TabControl>
+                    <DataGrid x:Name="csm_results_datagrid" AlternatingRowBackground="WhiteSmoke" LoadingRow="results_datagrid_LoadingRow" MouseDoubleClick="csm_results_datagrid_MouseDoubleClick" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" IsReadOnly="True"/>
+                </TabItem>
+            </TabControl>
         </GroupBox>
 
     </Grid>

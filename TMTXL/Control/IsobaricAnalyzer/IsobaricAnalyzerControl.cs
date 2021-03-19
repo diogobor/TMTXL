@@ -97,6 +97,9 @@ namespace IsobaricAnalyzer
             this.computePPIQuantitation();
         }
 
+        /// <summary>
+        /// Method responsible for quantifying PPIs
+        /// </summary>
         private void computePPIQuantitation()
         {
             if (resultsPackage == null || resultsPackage.XLSearchResults == null || resultsPackage.XLSearchResults.Count == 0) return;
@@ -111,9 +114,11 @@ namespace IsobaricAnalyzer
             foreach (ProteinProteinInteraction ppi in resultsPackage.PPIResults)
             {
                 List<CSMSearchResult> xlDic = resultsPackage.CSMSearchResults.Where(a => a.genes_alpha.Contains(ppi.gene_a) && a.genes_beta.Contains(ppi.gene_b)).ToList();
+                xlDic.RemoveAll(a => double.IsNaN(a.log2FoldChange));
 
                 if (xlDic.Count > 0)
                 {
+                    ppi.cSMs = xlDic;
                     ppi.specCount = xlDic.Count;
                     ppi.log2FoldChange = xlDic[0].log2FoldChange;
                     ppi.pValue = xlDic[0].pValue;
@@ -153,6 +158,9 @@ namespace IsobaricAnalyzer
             }
         }
 
+        /// <summary>
+        /// Method responsible for quantifying Residues
+        /// </summary>
         private void computeResidueQuantitation()
         {
             if (resultsPackage == null || resultsPackage.CSMSearchResults == null || resultsPackage.CSMSearchResults.Count == 0) return;
@@ -178,6 +186,9 @@ namespace IsobaricAnalyzer
 
             foreach (var xl in residueDic)
             {
+                xl.csms.RemoveAll(a => double.IsNaN(a.log2FoldChange));
+                if (xl.csms.Count == 0) continue;
+
                 List<string> alpha_ptns = new List<string>();
                 List<string> beta_ptns = new List<string>();
                 List<string> alpha_genes = new List<string>();
@@ -191,16 +202,13 @@ namespace IsobaricAnalyzer
                 }
                 );
 
-                CSMSearchResult residueSr = new CSMSearchResult(xl.csms[0]._index, xl.csms[0].fileIndex, xl.csms[0].scanNumber, xl.csms[0].charge, xl.csms[0].precursor_mass, xl.csms[0].alpha_peptide, xl.csms[0].beta_peptide, xl.csms[0].alpha_pos_xl, xl.csms[0].beta_pos_xl, xl.csms[0].alpha_pept_xl_pos, xl.csms[0].beta_pept_xl_pos, alpha_ptns.Distinct().ToList(), beta_ptns.Distinct().ToList(), xl.csms[0].peptide_alpha_mass, xl.csms[0].peptide_beta_mass, xl.csms[0].peptide_alpha_score, xl.csms[0].peptide_beta_score, alpha_genes.Distinct().ToList(), beta_genes.Distinct().ToList());
+                XLSearchResult residueSr = new XLSearchResult(xl.csms);
                 residueSr.quantitation = xl.csms[0].quantitation;
-                residueSr.specCount = xl.csms.Count;
                 residueSr.log2FoldChange = xl.csms[0].log2FoldChange;
                 residueSr.pValue = xl.csms[0].pValue;
 
                 if (xl.csms.Count > 1)
                 {
-                    xl.csms.RemoveAll(a => double.IsNaN(a.log2FoldChange));
-
                     var folds = xl.csms.Select(a => a.log2FoldChange).ToList();
                     residueSr.log2FoldChange = folds.Count > 0 ? folds.Average() : 0;
                     residueSr.pValue = folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xl.csms[0].pValue;
@@ -233,6 +241,9 @@ namespace IsobaricAnalyzer
             }
         }
 
+        /// <summary>
+        /// Method responsible for quantifying XLs
+        /// </summary>
         private void computeXLQuantitation()
         {
             if (resultsPackage == null || resultsPackage.CSMSearchResults == null || resultsPackage.CSMSearchResults.Count == 0) return;
@@ -250,7 +261,7 @@ namespace IsobaricAnalyzer
                          into groupedSeq
                         select new { xl = groupedSeq.Key, csms = groupedSeq.ToList() };
 
-            resultsPackage.XLSearchResults = new List<CSMSearchResult>();
+            resultsPackage.XLSearchResults = new List<XLSearchResult>();
 
             object progress_lock = new object();
             int xl_processed = 0;
@@ -259,6 +270,9 @@ namespace IsobaricAnalyzer
 
             foreach (var xl in xlDic)
             {
+                xl.csms.RemoveAll(a => double.IsNaN(a.log2FoldChange));
+                if (xl.csms.Count == 0) continue;
+
                 List<string> alpha_ptns = new List<string>();
                 List<string> beta_ptns = new List<string>();
                 List<string> alpha_genes = new List<string>();
@@ -272,9 +286,8 @@ namespace IsobaricAnalyzer
                 }
                 );
 
-                CSMSearchResult xlSr = new CSMSearchResult(xl.csms[0]._index, xl.csms[0].fileIndex, xl.csms[0].scanNumber, xl.csms[0].charge, xl.csms[0].precursor_mass, xl.csms[0].alpha_peptide, xl.csms[0].beta_peptide, xl.csms[0].alpha_pos_xl, xl.csms[0].beta_pos_xl, xl.csms[0].alpha_pept_xl_pos, xl.csms[0].beta_pept_xl_pos, alpha_ptns.Distinct().ToList(), beta_ptns.Distinct().ToList(), xl.csms[0].peptide_alpha_mass, xl.csms[0].peptide_beta_mass, xl.csms[0].peptide_alpha_score, xl.csms[0].peptide_beta_score, alpha_genes.Distinct().ToList(), beta_genes.Distinct().ToList());
+                XLSearchResult xlSr = new XLSearchResult(xl.csms);
                 xlSr.quantitation = xl.csms[0].quantitation;
-                xlSr.specCount = xl.csms.Count;
                 xlSr.log2FoldChange = xl.csms[0].log2FoldChange;
                 xlSr.pValue = xl.csms[0].pValue;
 
@@ -292,7 +305,6 @@ namespace IsobaricAnalyzer
                     //}
                     //xlSr.quantitation = thisQuantitation.ToList();
 
-                    xl.csms.RemoveAll(a => double.IsNaN(a.log2FoldChange));
 
                     var folds = xl.csms.Select(a => a.log2FoldChange).ToList();
                     xlSr.log2FoldChange = folds.Count > 0 ? folds.Average() : 0;
@@ -325,6 +337,10 @@ namespace IsobaricAnalyzer
                 }
             }
         }
+
+        /// <summary>
+        /// Method responsible for quantifying CSMs
+        /// </summary>
         private void computeCSMQuant()
         {
             //input - class labels

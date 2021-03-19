@@ -12,6 +12,7 @@ namespace TMTXL.Model
     /// </summary>
     [Serializable]
     [ProtoContract]
+    [ProtoInclude(26, typeof(XLSearchResult))]
     public class CSMSearchResult
     {
         /// <summary>
@@ -64,15 +65,12 @@ namespace TMTXL.Model
         [ProtoMember(21)]
         public List<string> genes_beta { get; set; }
         [ProtoMember(22)]
-        public int specCount { get; set; }
-
-        [ProtoMember(23)]
         public double avg_notNull_1 { get; set; }
-        [ProtoMember(24)]
+        [ProtoMember(23)]
         public double avg_notNull_2 { get; set; }
-        [ProtoMember(25)]
+        [ProtoMember(24)]
         public double log2FoldChange { get; set; }
-        [ProtoMember(26)]
+        [ProtoMember(25)]
         public double pValue { get; set; }
 
         /// <summary>
