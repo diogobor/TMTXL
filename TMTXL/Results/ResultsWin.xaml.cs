@@ -227,7 +227,7 @@ namespace TMTXL.Results
         public void Setup(ResultsPackage myResults)
         {
             MyResults = myResults;
-            filteredXLs = MyResults.XLSearchResults.Where(a => a.cSMs.Count > 2).ToList();
+            filteredXLs = MyResults.XLSearchResults.Where(a => a.cSMs.Count > 3).ToList();
 
             csm_results_datagrid.ItemsSource = createDataTableCSM().AsDataView();
             xl_results_datagrid.ItemsSource = createDataTableXL().AsDataView();
@@ -255,12 +255,18 @@ namespace TMTXL.Results
             var Greenseries = new ScatterSeries { MarkerType = MarkerType.Circle };
             Greenseries.MarkerFill = OxyColors.Green;
             Greenseries.MarkerStroke = OxyColors.Green;
+
             var Redseries = new ScatterSeries { MarkerType = MarkerType.Circle };
             Redseries.MarkerFill = OxyColors.Red;
             Redseries.MarkerStroke = OxyColors.Red;
+
             var Greyseries = new ScatterSeries { MarkerType = MarkerType.Circle };
             Greyseries.MarkerFill = OxyColors.Transparent;
-            Greyseries.MarkerStroke = OxyColors.Black;
+            Greyseries.MarkerStroke = OxyColors.LightGray;
+
+            var Yellowseries = new ScatterSeries { MarkerType = MarkerType.Circle };
+            Yellowseries.MarkerFill = OxyColors.DarkGoldenrod;
+            Yellowseries.MarkerStroke = OxyColors.DarkGoldenrod;
 
             foreach (XLSearchResult xl in MyResults.XLSearchResults)
             {
@@ -277,17 +283,22 @@ namespace TMTXL.Results
                 {
                     if (avgLogFold > 0)
                     {
-                        Greenseries.Points.Add(new ScatterPoint(Math.Round(1 - pValue, 4), avgLogFold, 5, 0));
-                        
+                        if (pValue < 0.05)
+                            Greenseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 3, 0));
+                        else
+                            Yellowseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 3, 0));
                     }
                     else
                     {
-                        Redseries.Points.Add(new ScatterPoint(Math.Round(1 - pValue, 4), avgLogFold, 5, 0));
+                        if (pValue < 0.05)
+                            Redseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 3, 0));
+                        else
+                            Yellowseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 3, 0));
                     }
                 }
                 else
                 {
-                    Greyseries.Points.Add(new ScatterPoint(Math.Round(1 - pValue, 4), avgLogFold, 5, 0));
+                    Greyseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 1, 0));
                 }
 
             }
@@ -296,9 +307,10 @@ namespace TMTXL.Results
             //series.Points.Add(new ScatterPoint(1, 0) { Value = 0 });
             //series.Points.Add(new ScatterPoint(2, 1) { Value = 1 });
             //series.Points.Add(new ScatterPoint(3, -1) { Value = 1 });
+            plotModel1.Series.Add(Greyseries);
             plotModel1.Series.Add(Greenseries);
             plotModel1.Series.Add(Redseries);
-            plotModel1.Series.Add(Greyseries);
+            plotModel1.Series.Add(Yellowseries);
 
             xl_plot.Model = plotModel1;
         }
