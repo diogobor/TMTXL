@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:oxy="http://oxyplot.org/wpf"
         xmlns:local="clr-namespace:TMTXL.Results"
         mc:Ignorable="d"
         Title="TMT - XL-MS :: Results" Height="450" Width="910" WindowStartupLocation="CenterScreen">
@@ -51,8 +52,22 @@
                 <TabItem Header="CSMs" x:Name="TabItemCSMs">
                     <DataGrid x:Name="csm_results_datagrid" AlternatingRowBackground="WhiteSmoke" LoadingRow="results_datagrid_LoadingRow" MouseDoubleClick="csm_results_datagrid_MouseDoubleClick" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" IsReadOnly="True"/>
                 </TabItem>
+                <TabItem Header="XL distribution" x:Name="TabItemXLVolcanoPlot">
+                    <Grid>
+                        <oxy:PlotView x:Name="xl_plot" Grid.Row="1" Background="White" >
+                            <oxy:PlotView.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Save" Click="XLPlotMenuItemSave_Click">
+                                        <MenuItem.Icon>
+                                            <Image Source="/Results/Save-icon.png" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </oxy:PlotView.ContextMenu>
+                        </oxy:PlotView>
+                    </Grid>
+                </TabItem>
             </TabControl>
         </GroupBox>
-
     </Grid>
 </Window>

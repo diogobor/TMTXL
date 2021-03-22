@@ -1,4 +1,7 @@
-﻿using System;
+﻿using OxyPlot;
+using OxyPlot.Axes;
+using OxyPlot.Series;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -25,6 +28,8 @@ namespace TMTXL.Results
     {
         private ResultsPackage MyResults;
 
+        private List<XLSearchResult> filteredXLs;
+
         public ResultsWin()
         {
             InitializeComponent();
@@ -34,7 +39,6 @@ namespace TMTXL.Results
         {
             this.Close();
         }
-
 
         /// <summary>
         /// Method responsible for crete data table for CSMs
@@ -80,16 +84,27 @@ namespace TMTXL.Results
                 row["β position"] = csm.beta_pos_xl;
                 if (true)//TMT
                 {
-                    row["126"] = Utils.Utils.RoundUp(csm.quantitation[0]);
-                    row["127N"] = Utils.Utils.RoundUp(csm.quantitation[1]);
-                    row["127C"] = Utils.Utils.RoundUp(csm.quantitation[2]);
-                    row["128N"] = Utils.Utils.RoundUp(csm.quantitation[3]);
-                    row["128C"] = Utils.Utils.RoundUp(csm.quantitation[4]);
-                    row["129N"] = Utils.Utils.RoundUp(csm.quantitation[5]);
-                    row["129C"] = Utils.Utils.RoundUp(csm.quantitation[6]);
-                    row["130N"] = Utils.Utils.RoundUp(csm.quantitation[7]);
-                    row["130C"] = Utils.Utils.RoundUp(csm.quantitation[8]);
-                    row["131"] = Utils.Utils.RoundUp(csm.quantitation[9]);
+                    row["126"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[0], 4);
+                    row["127N"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[1], 4);
+                    row["127C"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[2], 4);
+                    row["128N"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[3], 4);
+                    row["128C"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[4], 4);
+                    row["129N"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[5], 4);
+                    row["129C"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[6], 4);
+                    row["130N"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[7], 4);
+                    row["130C"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[8], 4);
+                    row["131"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[9], 4);
+
+                    //row["126"] = Utils.Utils.RoundUp(csm.quantitation[0]/ csm.quantitation[0]);
+                    //row["127N"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[1]);
+                    //row["127C"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[2]);
+                    //row["128N"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[3]);
+                    //row["128C"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[4]);
+                    //row["129N"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[5]);
+                    //row["129C"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[6]);
+                    //row["130N"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[7]);
+                    //row["130C"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[8]);
+                    //row["131"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[9]);
                 }
                 row["Avg 1 not Null"] = Utils.Utils.RoundUp(csm.avg_notNull_1);
                 row["Avg 2 not Null"] = Utils.Utils.RoundUp(csm.avg_notNull_2);
@@ -212,12 +227,80 @@ namespace TMTXL.Results
         public void Setup(ResultsPackage myResults)
         {
             MyResults = myResults;
+            filteredXLs = MyResults.XLSearchResults.Where(a => a.cSMs.Count > 2).ToList();
 
             csm_results_datagrid.ItemsSource = createDataTableCSM().AsDataView();
             xl_results_datagrid.ItemsSource = createDataTableXL().AsDataView();
             residues_results_datagrid.ItemsSource = createDataTableResidue().AsDataView();
             ppi_results_datagrid.ItemsSource = createDataTablePPI().AsDataView();
 
+            plotXLDistribution();
+
+        }
+
+        private void plotXLDistribution()
+        {
+            var plotModel1 = new PlotModel();
+            plotModel1.Axes.Add(new LinearColorAxis
+            {
+                Position = AxisPosition.None,
+                Minimum = 0.1,
+                Maximum = 0.9,
+                HighColor = OxyColors.Red,
+                LowColor = OxyColors.Green
+            });
+
+
+            //plotModel1.Axes.Add(new LinearColorAxis { Position = AxisPosition.None, Minimum = 0.1, Maximum = 0.9, HighColor = OxyColors.Red, LowColor = OxyColors.Black });
+            var Greenseries = new ScatterSeries { MarkerType = MarkerType.Circle };
+            Greenseries.MarkerFill = OxyColors.Green;
+            Greenseries.MarkerStroke = OxyColors.Green;
+            var Redseries = new ScatterSeries { MarkerType = MarkerType.Circle };
+            Redseries.MarkerFill = OxyColors.Red;
+            Redseries.MarkerStroke = OxyColors.Red;
+            var Greyseries = new ScatterSeries { MarkerType = MarkerType.Circle };
+            Greyseries.MarkerFill = OxyColors.Transparent;
+            Greyseries.MarkerStroke = OxyColors.Black;
+
+            foreach (XLSearchResult xl in MyResults.XLSearchResults)
+            {
+                //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
+                if (xl.pValue == 0.5) { continue; }
+
+                double avgLogFold = xl.log2FoldChange;
+                double pValue = xl.pValue;
+
+                if (avgLogFold < -3) { avgLogFold = -3; }
+                if (avgLogFold > 3) { avgLogFold = 3; }
+
+                if (filteredXLs.ToList().Contains(xl))
+                {
+                    if (avgLogFold > 0)
+                    {
+                        Greenseries.Points.Add(new ScatterPoint(Math.Round(1 - pValue, 4), avgLogFold, 5, 0));
+                        
+                    }
+                    else
+                    {
+                        Redseries.Points.Add(new ScatterPoint(Math.Round(1 - pValue, 4), avgLogFold, 5, 0));
+                    }
+                }
+                else
+                {
+                    Greyseries.Points.Add(new ScatterPoint(Math.Round(1 - pValue, 4), avgLogFold, 5, 0));
+                }
+
+            }
+
+            //series.Points.Add(new ScatterPoint(0, 0) { Value = 0 });
+            //series.Points.Add(new ScatterPoint(1, 0) { Value = 0 });
+            //series.Points.Add(new ScatterPoint(2, 1) { Value = 1 });
+            //series.Points.Add(new ScatterPoint(3, -1) { Value = 1 });
+            plotModel1.Series.Add(Greenseries);
+            plotModel1.Series.Add(Redseries);
+            plotModel1.Series.Add(Greyseries);
+
+            xl_plot.Model = plotModel1;
         }
 
         private string GetSelectedValue(DataGrid grid, int columnIndex = 0)
@@ -225,7 +308,7 @@ namespace TMTXL.Results
             if (grid.SelectedCells.Count == 0) return string.Empty;
 
             DataGridCellInfo cellInfo = grid.SelectedCells[columnIndex];
-            if (cellInfo == null) return "0";
+            if (cellInfo.Column == null) return "0";
 
             DataGridBoundColumn column = cellInfo.Column as DataGridBoundColumn;
             if (column == null) return null;
@@ -315,6 +398,9 @@ namespace TMTXL.Results
             {
                 try
                 {
+                    if (MyResults == null)
+                        MyResults = new();
+
                     MyResults = MyResults.DeserializeResults(dlg.FileName);
                     this.Setup(MyResults);
                     System.Windows.Forms.MessageBox.Show("The results have been load successfully!", "Information", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
@@ -355,6 +441,31 @@ namespace TMTXL.Results
             ChannelComparison channelComparison = new ChannelComparison();
             channelComparison.Setup(current_xlSeachResult, MyResults.FileNameIndex);
             channelComparison.ShowDialog();
+        }
+
+        private void XLPlotMenuItemSave_Click(object sender, RoutedEventArgs e)
+        {
+            string getValue = GetSelectedValue(csm_results_datagrid);
+            if (String.IsNullOrEmpty(getValue)) return;
+
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = "Volcano plot";
+            dlg.DefaultExt = ".png";
+            dlg.Filter = "PNG files (.png)|*.png";
+
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    xl_plot.SaveBitmap(dlg.FileName);
+                    System.Windows.Forms.MessageBox.Show("The plot has been saved successfully!", "Information", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
+                }
+                catch (Exception exc)
+                {
+                    Console.WriteLine("ERROR: " + exc.Message);
+                    System.Windows.Forms.MessageBox.Show("Failed to save!", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                }
+            }
         }
     }
 }

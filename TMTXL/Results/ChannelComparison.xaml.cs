@@ -136,7 +136,7 @@ namespace TMTXL.Results
             {
 
                 var columnSeries = new ColumnSeries();
-                columnSeries.Title = "Scan Number: " + csm.scanNumber.ToString();
+                columnSeries.Title = "Scan Number: " + csm.scanNumber;
 
                 for (int i = 0; i < csm.quantitation.Count; i++)
                 {
