@@ -274,7 +274,7 @@ namespace TMTXL.Results
                 if (xl.pValue == 0.5) { continue; }
 
                 double avgLogFold = xl.log2FoldChange;
-                double pValue = xl.pValue;
+                double pValue = Math.Log(xl.pValue, 2) * (-1);
 
                 if (avgLogFold < -3) { avgLogFold = -3; }
                 if (avgLogFold > 3) { avgLogFold = 3; }
@@ -283,14 +283,14 @@ namespace TMTXL.Results
                 {
                     if (avgLogFold > 0)
                     {
-                        if (pValue < 0.05)
+                        if (pValue > 1.30102) //p-value < 0.05
                             Greenseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 3, 0));
                         else
                             Yellowseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 3, 0));
                     }
                     else
                     {
-                        if (pValue < 0.05)
+                        if (pValue > 1.30102) //p-value < 0.05
                             Redseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 3, 0));
                         else
                             Yellowseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 3, 0));
