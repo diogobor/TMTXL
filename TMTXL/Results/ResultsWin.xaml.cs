@@ -71,7 +71,7 @@ namespace TMTXL.Results
             dtCSM.Columns.Add("Log2(Fold Change)", typeof(double));
             dtCSM.Columns.Add("p-value", typeof(double));
 
-            foreach (CSMSearchResult csm in MyResults.CSMSearchResults)
+            foreach (CSMSearchResult csm in MyResults.CSMSearchResults.OrderByDescending(a => a.log2FoldChange).ThenByDescending(a => a.pValue))
             {
                 var row = dtCSM.NewRow();
                 row["Scan Number"] = csm.scanNumber;
@@ -135,7 +135,7 @@ namespace TMTXL.Results
             dtXL.Columns.Add("Log2(Fold Change)", typeof(double));
             dtXL.Columns.Add("p-value", typeof(double));
 
-            foreach (XLSearchResult xl in MyResults.XLSearchResults)
+            foreach (XLSearchResult xl in MyResults.XLSearchResults.OrderByDescending(a => a.log2FoldChange).ThenByDescending(a => a.cSMs.Count))
             {
                 var row = dtXL.NewRow();
                 row["Gene A"] = String.Join(" ,", xl.cSMs[0].genes_alpha);
@@ -170,7 +170,7 @@ namespace TMTXL.Results
             dtResidues.Columns.Add("Log2(Fold Change)", typeof(double));
             dtResidues.Columns.Add("p-value", typeof(double));
 
-            foreach (XLSearchResult xl in MyResults.ResidueSearchResults)
+            foreach (XLSearchResult xl in MyResults.ResidueSearchResults.OrderByDescending(a => a.log2FoldChange).ThenByDescending(a => a.cSMs.Count))
             {
                 var row = dtResidues.NewRow();
                 row["Gene A"] = xl.cSMs[0].genes_alpha[0];
@@ -199,19 +199,22 @@ namespace TMTXL.Results
             dtPPI.Columns.Add("Protein A");
             dtPPI.Columns.Add("Protein B");
             dtPPI.Columns.Add("PPI score", typeof(double));
+            dtPPI.Columns.Add("XL count", typeof(int));
             dtPPI.Columns.Add("Spec count", typeof(int));
             dtPPI.Columns.Add("Log2(Fold Change)", typeof(double));
             dtPPI.Columns.Add("p-value", typeof(double));
 
-            foreach (ProteinProteinInteraction ppi in MyResults.PPIResults)
+            foreach (ProteinProteinInteraction ppi in MyResults.PPIResults.OrderByDescending(a => a.log2FoldChange).ThenByDescending(a => a.specCount))
             {
+                if (ppi.pValue == 0 && ppi.log2FoldChange == 0) continue;
                 var row = dtPPI.NewRow();
                 row["Gene A"] = ppi.gene_a;
                 row["Gene B"] = ppi.gene_b;
                 row["Protein A"] = ppi.protein_a;
                 row["Protein B"] = ppi.protein_b;
-                row["PPI score"] = Math.Round(ppi.score, 4);
+                row["PPI score"] = Utils.Utils.RoundUp(ppi.score, 30);
                 row["Spec count"] = ppi.specCount;
+                row["XL count"] = MyResults.XLSearchResults.Where(a => a.cSMs.Any(b => b.genes_alpha.Contains(ppi.gene_a) && b.genes_beta.Contains(ppi.gene_b))).Count();
                 row["Log2(Fold Change)"] = Math.Round(ppi.log2FoldChange, 4);
                 row["p-value"] = Math.Round(ppi.pValue, 4);
                 dtPPI.Rows.Add(row);
@@ -271,7 +274,7 @@ namespace TMTXL.Results
 
             var Yellowseries = new ScatterSeries { MarkerType = MarkerType.Circle };
             Yellowseries.MarkerFill = OxyColors.Transparent;
-            Yellowseries.MarkerStroke = OxyColors.DarkGoldenrod;
+            Yellowseries.MarkerStroke = OxyColors.Gray;
             Yellowseries.TrackerFormatString = "\nXL = {XL}\nQuant = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
 
             var greenPoints = new List<CustomDataPoint>();
@@ -355,7 +358,7 @@ namespace TMTXL.Results
                     //grayPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 1));
                 }
             }
-            
+
             zeroLine.Points.Add(new OxyPlot.DataPoint(0, 0));
             zeroLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, 0));
             pValueThresholdLine.Points.Add(new OxyPlot.DataPoint(1.30102, 3));
@@ -365,7 +368,7 @@ namespace TMTXL.Results
             foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(0, -1));
             foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, -1));
 
-            grayPoints.RemoveAll(a=>a.X > maxPvalue);
+            grayPoints.RemoveAll(a => a.X > maxPvalue);
             Greenseries.ItemsSource = greenPoints;
             Yellowseries.ItemsSource = yellowPoints;
             Redseries.ItemsSource = redPoints;
@@ -382,6 +385,151 @@ namespace TMTXL.Results
             xl_plot.Model = plotModel1;
         }
 
+        private void plotPPIDistribution(List<XLSearchResult> xlSearchResults)
+        {
+            if (xlSearchResults == null) return;
+
+            var plotModel1 = new PlotModel() { LegendPosition = LegendPosition.LeftTop };
+            plotModel1.Axes.Add(new LinearAxis
+            {
+                Position = AxisPosition.Left,
+                Title = "Log2(Fold Change)"
+            });
+
+            plotModel1.Axes.Add(new LinearAxis
+            {
+                Position = AxisPosition.Bottom,
+                Title = "-Log(p-value)"
+            });
+
+
+            var Greenseries = new ScatterSeries { MarkerType = MarkerType.Circle };
+            Greenseries.MarkerFill = OxyColors.Green;
+            Greenseries.MarkerStroke = OxyColors.Green;
+            Greenseries.TrackerFormatString = "\nXL = {XL}\nQuant = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
+
+            var Redseries = new ScatterSeries { MarkerType = MarkerType.Circle };
+            Redseries.MarkerFill = OxyColors.Red;
+            Redseries.MarkerStroke = OxyColors.Red;
+            Redseries.TrackerFormatString = "\nXL = {XL}\nQuant = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
+
+            var Grayseries = new ScatterSeries { MarkerType = MarkerType.Circle };
+            Grayseries.MarkerFill = OxyColors.Transparent;
+            Grayseries.MarkerStroke = OxyColors.LightGray;
+            Grayseries.TrackerFormatString = "\nXL = {XL}\nQuant = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
+
+            var Yellowseries = new ScatterSeries { MarkerType = MarkerType.Circle };
+            Yellowseries.MarkerFill = OxyColors.Transparent;
+            Yellowseries.MarkerStroke = OxyColors.Gray;
+            Yellowseries.TrackerFormatString = "\nXL = {XL}\nQuant = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
+
+            var greenPoints = new List<CustomDataPoint>();
+            var redPoints = new List<CustomDataPoint>();
+            var grayPoints = new List<CustomDataPoint>();
+            var yellowPoints = new List<CustomDataPoint>();
+
+            // base line zero
+            var zeroLine = new OxyPlot.Series.LineSeries()
+            {
+                Color = OxyPlot.OxyColors.Black,
+                StrokeThickness = 1,
+                LineStyle = LineStyle.Dash,
+                MarkerSize = 1,
+                MarkerType = OxyPlot.MarkerType.None
+            };
+
+            // base line p-value threshold
+            var pValueThresholdLine = new OxyPlot.Series.LineSeries()
+            {
+                Color = OxyPlot.OxyColors.LightGray,
+                StrokeThickness = 1.5,
+                LineStyle = LineStyle.Dot,
+                MarkerSize = 1,
+                MarkerType = OxyPlot.MarkerType.None
+            };
+
+            // base line fold change upper threshold
+            var foldChangeUpperThresholdLine = new OxyPlot.Series.LineSeries()
+            {
+                Color = OxyPlot.OxyColors.LightGray,
+                StrokeThickness = 1.5,
+                LineStyle = LineStyle.Dot,
+                MarkerSize = 1,
+                MarkerType = OxyPlot.MarkerType.None
+            };
+
+            // base line fold change lower threshold
+            var foldChangeLowerThresholdLine = new OxyPlot.Series.LineSeries()
+            {
+                Color = OxyPlot.OxyColors.LightGray,
+                StrokeThickness = 1.5,
+                LineStyle = LineStyle.Dot,
+                MarkerSize = 1,
+                MarkerType = OxyPlot.MarkerType.None
+            };
+
+            double maxPvalue = 0;
+            foreach (XLSearchResult xl in xlSearchResults)
+            {
+                //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
+                if (xl.pValue == 0.5) { continue; }
+
+                double avgLogFold = xl.log2FoldChange;
+                double pValue = Math.Log(xl.pValue, 10) * (-1);
+
+                if (avgLogFold < -3) { avgLogFold = -3; }
+                if (avgLogFold > 3) { avgLogFold = 3; }
+
+                if (filteredXLs.ToList().Contains(xl))
+                {
+                    if (avgLogFold > 0)
+                    {
+                        if (pValue > 1.30102 && avgLogFold > 1) //p-value < 0.05 && fold change > 1
+                            greenPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                        else
+                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                    }
+                    else
+                    {
+                        if (pValue > 1.30102 && avgLogFold < -1) //p-value < 0.05 && fold change < -1
+                            redPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                        else
+                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                    }
+
+                    if (maxPvalue < pValue) maxPvalue = pValue;
+                }
+                else
+                {
+                    grayPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 1));
+                }
+            }
+
+            zeroLine.Points.Add(new OxyPlot.DataPoint(0, 0));
+            zeroLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, 0));
+            pValueThresholdLine.Points.Add(new OxyPlot.DataPoint(1.30102, 3));
+            pValueThresholdLine.Points.Add(new OxyPlot.DataPoint(1.30102, -3));
+            foldChangeUpperThresholdLine.Points.Add(new OxyPlot.DataPoint(0, 1));
+            foldChangeUpperThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, 1));
+            foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(0, -1));
+            foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, -1));
+
+            //grayPoints.RemoveAll(a => a.X > maxPvalue);
+            Greenseries.ItemsSource = greenPoints;
+            Yellowseries.ItemsSource = yellowPoints;
+            Redseries.ItemsSource = redPoints;
+            Grayseries.ItemsSource = grayPoints;
+            plotModel1.Series.Add(Grayseries);
+            plotModel1.Series.Add(Greenseries);
+            plotModel1.Series.Add(Redseries);
+            plotModel1.Series.Add(Yellowseries);
+            plotModel1.Series.Add(zeroLine);
+            plotModel1.Series.Add(pValueThresholdLine);
+            plotModel1.Series.Add(foldChangeUpperThresholdLine);
+            plotModel1.Series.Add(foldChangeLowerThresholdLine);
+
+            ppi_plot.Model = plotModel1;
+        }
         private string GetSelectedValue(DataGrid grid, int columnIndex = 0)
         {
             if (grid.SelectedCells.Count == 0) return string.Empty;
@@ -545,6 +693,46 @@ namespace TMTXL.Results
                     System.Windows.Forms.MessageBox.Show("Failed to save!", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                 }
             }
+        }
+
+        private void PPIPlotMenuItemSave_Click(object sender, RoutedEventArgs e)
+        {
+            string getValue = GetSelectedValue(csm_results_datagrid);
+            if (String.IsNullOrEmpty(getValue)) return;
+
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = "Volcano plot";
+            dlg.DefaultExt = ".png";
+            dlg.Filter = "PNG files (.png)|*.png";
+
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    ppi_plot.SaveBitmap(dlg.FileName);
+                    System.Windows.Forms.MessageBox.Show("The plot has been saved successfully!", "Information", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
+                }
+                catch (Exception exc)
+                {
+                    Console.WriteLine("ERROR: " + exc.Message);
+                    System.Windows.Forms.MessageBox.Show("Failed to save!", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+        private void ppi_results_datagrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            string gene_a = GetSelectedValue(ppi_results_datagrid);
+            if (String.IsNullOrEmpty(gene_a)) return;
+
+            string gene_b = GetSelectedValue(ppi_results_datagrid, 1);
+
+            List<XLSearchResult> xlSeachResult = MyResults.XLSearchResults.Where(a => a.cSMs.Any(b => b.genes_alpha.Contains(gene_a) &&
+            b.genes_beta.Contains(gene_b))).ToList();
+
+            if (xlSeachResult == null || xlSeachResult.Count == 0) return;
+
+            plotPPIDistribution(xlSeachResult);
         }
     }
 

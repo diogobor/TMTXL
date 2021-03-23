@@ -41,7 +41,25 @@
             </GroupBox.Header>
             <TabControl x:Name="tabControl" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <TabItem Header="Protein-protein interaction" x:Name="TabItemPPI">
-                    <DataGrid x:Name="ppi_results_datagrid" AlternatingRowBackground="WhiteSmoke" LoadingRow="results_datagrid_LoadingRow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" IsReadOnly="True"/>
+                    <Grid>
+                        <oxy:PlotView x:Name="ppi_plot" Background="White" >
+                            <oxy:PlotView.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Save" Click="PPIPlotMenuItemSave_Click">
+                                        <MenuItem.Icon>
+                                            <Image Source="/Results/Save-icon.png" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </oxy:PlotView.ContextMenu>
+                        </oxy:PlotView>
+                        <DataGrid x:Name="ppi_results_datagrid" MinWidth="815" AlternatingRowBackground="WhiteSmoke" LoadingRow="results_datagrid_LoadingRow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" IsReadOnly="True" SelectionChanged="ppi_results_datagrid_SelectionChanged"/>
+                        
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+                    </Grid>
                 </TabItem>
                 <TabItem Header="Residues" x:Name="TabItemResidues">
                     <DataGrid x:Name="residues_results_datagrid" AlternatingRowBackground="WhiteSmoke" LoadingRow="results_datagrid_LoadingRow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" IsReadOnly="True"/>
@@ -69,5 +87,6 @@
                 </TabItem>
             </TabControl>
         </GroupBox>
+        
     </Grid>
 </Window>
