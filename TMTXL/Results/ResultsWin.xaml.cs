@@ -240,41 +240,93 @@ namespace TMTXL.Results
 
         private void plotXLDistribution()
         {
-            var plotModel1 = new PlotModel();
-            plotModel1.Axes.Add(new LinearColorAxis
+            var plotModel1 = new PlotModel() { LegendPosition = LegendPosition.LeftTop };
+            plotModel1.Axes.Add(new LinearAxis
             {
-                Position = AxisPosition.None,
-                Minimum = 0.1,
-                Maximum = 0.9,
-                HighColor = OxyColors.Red,
-                LowColor = OxyColors.Green
+                Position = AxisPosition.Left,
+                Title = "Log2(Fold Change)"
+            });
+
+            plotModel1.Axes.Add(new LinearAxis
+            {
+                Position = AxisPosition.Bottom,
+                Title = "-Log(p-value)"
             });
 
 
-            //plotModel1.Axes.Add(new LinearColorAxis { Position = AxisPosition.None, Minimum = 0.1, Maximum = 0.9, HighColor = OxyColors.Red, LowColor = OxyColors.Black });
             var Greenseries = new ScatterSeries { MarkerType = MarkerType.Circle };
             Greenseries.MarkerFill = OxyColors.Green;
             Greenseries.MarkerStroke = OxyColors.Green;
+            Greenseries.TrackerFormatString = "\nXL = {XL}\nQuant = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
 
             var Redseries = new ScatterSeries { MarkerType = MarkerType.Circle };
             Redseries.MarkerFill = OxyColors.Red;
             Redseries.MarkerStroke = OxyColors.Red;
+            Redseries.TrackerFormatString = "\nXL = {XL}\nQuant = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
 
-            var Greyseries = new ScatterSeries { MarkerType = MarkerType.Circle };
-            Greyseries.MarkerFill = OxyColors.Transparent;
-            Greyseries.MarkerStroke = OxyColors.LightGray;
+            var Grayseries = new ScatterSeries { MarkerType = MarkerType.Circle };
+            Grayseries.MarkerFill = OxyColors.Transparent;
+            Grayseries.MarkerStroke = OxyColors.LightGray;
+            Grayseries.TrackerFormatString = "\nXL = {XL}\nQuant = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
 
             var Yellowseries = new ScatterSeries { MarkerType = MarkerType.Circle };
-            Yellowseries.MarkerFill = OxyColors.DarkGoldenrod;
+            Yellowseries.MarkerFill = OxyColors.Transparent;
             Yellowseries.MarkerStroke = OxyColors.DarkGoldenrod;
+            Yellowseries.TrackerFormatString = "\nXL = {XL}\nQuant = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
 
+            var greenPoints = new List<CustomDataPoint>();
+            var redPoints = new List<CustomDataPoint>();
+            var grayPoints = new List<CustomDataPoint>();
+            var yellowPoints = new List<CustomDataPoint>();
+
+            // base line zero
+            var zeroLine = new OxyPlot.Series.LineSeries()
+            {
+                Color = OxyPlot.OxyColors.Black,
+                StrokeThickness = 1,
+                LineStyle = LineStyle.Dash,
+                MarkerSize = 1,
+                MarkerType = OxyPlot.MarkerType.None
+            };
+
+            // base line p-value threshold
+            var pValueThresholdLine = new OxyPlot.Series.LineSeries()
+            {
+                Color = OxyPlot.OxyColors.LightGray,
+                StrokeThickness = 1.5,
+                LineStyle = LineStyle.Dot,
+                MarkerSize = 1,
+                MarkerType = OxyPlot.MarkerType.None
+            };
+
+            // base line fold change upper threshold
+            var foldChangeUpperThresholdLine = new OxyPlot.Series.LineSeries()
+            {
+                Color = OxyPlot.OxyColors.LightGray,
+                StrokeThickness = 1.5,
+                LineStyle = LineStyle.Dot,
+                MarkerSize = 1,
+                MarkerType = OxyPlot.MarkerType.None
+            };
+
+            // base line fold change lower threshold
+            var foldChangeLowerThresholdLine = new OxyPlot.Series.LineSeries()
+            {
+                Color = OxyPlot.OxyColors.LightGray,
+                StrokeThickness = 1.5,
+                LineStyle = LineStyle.Dot,
+                MarkerSize = 1,
+                MarkerType = OxyPlot.MarkerType.None
+            };
+
+            double maxPvalue = 0;
             foreach (XLSearchResult xl in MyResults.XLSearchResults)
             {
                 //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
                 if (xl.pValue == 0.5) { continue; }
 
                 double avgLogFold = xl.log2FoldChange;
-                double pValue = Math.Log(xl.pValue, 2) * (-1);
+                double pValue = Math.Log(xl.pValue, 10) * (-1);
 
                 if (avgLogFold < -3) { avgLogFold = -3; }
                 if (avgLogFold > 3) { avgLogFold = 3; }
@@ -283,34 +335,49 @@ namespace TMTXL.Results
                 {
                     if (avgLogFold > 0)
                     {
-                        if (pValue > 1.30102) //p-value < 0.05
-                            Greenseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 3, 0));
+                        if (pValue > 1.30102 && avgLogFold > 1) //p-value < 0.05 && fold change > 1
+                            greenPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                         else
-                            Yellowseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 3, 0));
+                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                     }
                     else
                     {
-                        if (pValue > 1.30102) //p-value < 0.05
-                            Redseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 3, 0));
+                        if (pValue > 1.30102 && avgLogFold < -1) //p-value < 0.05 && fold change < -1
+                            redPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                         else
-                            Yellowseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 3, 0));
+                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                     }
+
+                    if (maxPvalue < pValue) maxPvalue = pValue;
                 }
                 else
                 {
-                    Greyseries.Points.Add(new ScatterPoint(Math.Round(pValue, 4), avgLogFold, 1, 0));
+                    //grayPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 1));
                 }
-
             }
+            
+            zeroLine.Points.Add(new OxyPlot.DataPoint(0, 0));
+            zeroLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, 0));
+            pValueThresholdLine.Points.Add(new OxyPlot.DataPoint(1.30102, 3));
+            pValueThresholdLine.Points.Add(new OxyPlot.DataPoint(1.30102, -3));
+            foldChangeUpperThresholdLine.Points.Add(new OxyPlot.DataPoint(0, 1));
+            foldChangeUpperThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, 1));
+            foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(0, -1));
+            foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, -1));
 
-            //series.Points.Add(new ScatterPoint(0, 0) { Value = 0 });
-            //series.Points.Add(new ScatterPoint(1, 0) { Value = 0 });
-            //series.Points.Add(new ScatterPoint(2, 1) { Value = 1 });
-            //series.Points.Add(new ScatterPoint(3, -1) { Value = 1 });
-            plotModel1.Series.Add(Greyseries);
+            grayPoints.RemoveAll(a=>a.X > maxPvalue);
+            Greenseries.ItemsSource = greenPoints;
+            Yellowseries.ItemsSource = yellowPoints;
+            Redseries.ItemsSource = redPoints;
+            Grayseries.ItemsSource = grayPoints;
+            plotModel1.Series.Add(Grayseries);
             plotModel1.Series.Add(Greenseries);
             plotModel1.Series.Add(Redseries);
             plotModel1.Series.Add(Yellowseries);
+            plotModel1.Series.Add(zeroLine);
+            plotModel1.Series.Add(pValueThresholdLine);
+            plotModel1.Series.Add(foldChangeUpperThresholdLine);
+            plotModel1.Series.Add(foldChangeLowerThresholdLine);
 
             xl_plot.Model = plotModel1;
         }
@@ -478,6 +545,25 @@ namespace TMTXL.Results
                     System.Windows.Forms.MessageBox.Show("Failed to save!", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                 }
             }
+        }
+    }
+
+    public class CustomDataPoint : IScatterPointProvider
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public int SpecCount { get; set; }
+        public string XL { get; set; }
+        public int Size { get; set; }
+        public ScatterPoint GetScatterPoint() => new ScatterPoint(X, Y, Size, Size);
+
+        public CustomDataPoint(double x, double y, int specCount, string xl, int size)
+        {
+            X = x;
+            Y = y;
+            SpecCount = specCount;
+            XL = xl;
+            Size = size;
         }
     }
 }
