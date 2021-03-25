@@ -35,6 +35,8 @@ namespace TMTXL.Model
         //<MZ, Intensity>
         [ProtoMember(7)]
         public List<Tuple<double, double>> Ions { get; set; }
+        [ProtoMember(8)]
+        public int PrecursorScanNumber { get; set; }
 
         public static string GetInstrumentType(short theType)
         {
