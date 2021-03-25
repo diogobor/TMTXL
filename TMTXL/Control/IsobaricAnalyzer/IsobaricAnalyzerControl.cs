@@ -1,6 +1,7 @@
 ﻿using PatternTools;
 using PatternTools.FastaParser;
 using PatternTools.PLP;
+using PatternTools.YADA;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -355,6 +356,8 @@ namespace IsobaricAnalyzer
             {
                 string fileName = resultsPackage.FileNameIndex[csm.fileIndex];
 
+                if (csm.quantitation == null) continue;
+
                 for (int m = 0; m < myParams.MarkerMZs.Count; m++)
                 {
                     if (myParams.NormalizationIdentifiedSpectra)
@@ -406,10 +409,17 @@ namespace IsobaricAnalyzer
                 rawFiles = folder.GetFiles("*.raw", SearchOption.AllDirectories).ToList();
             }
 
+            //MS1 Correction
+            double isolationWindow = 0.7;
+            double envelopePPMMS1 = 15;
+            int maxCharge = 7;
+            double stringency = 0.92;
+            bool checkMultiplexSpectra = false;
+
             resultsPackage.Spectra = new List<MSUltraLight>();
             foreach (FileInfo rawFile in rawFiles)
             {
-                Console.WriteLine("Extracting data for " + rawFile.Name);
+                Console.WriteLine("Extracting MS/MS for " + rawFile.Name);
 
                 string current_fileNme = rawFile.Name.Substring(0, rawFile.Name.Length - rawFile.Extension.Length);
                 int rawFileIndex = resultsPackage.FileNameIndex.IndexOf(current_fileNme);
@@ -431,19 +441,106 @@ namespace IsobaricAnalyzer
                                                              }).ToList();
                 spectraFromAThermoFile.RemoveAll(a => a.Ions == null);
 
+                int object_processed = 0;
+                int old_progress = 0;
+                double totalObjects = 0;
+                List<PatternTools.MSParserLight.MSUltraLight> ms1SpectraFromAThermoFile = null;
+                List<EnvelopeScore>[] ms1Envelopes = null;
+                if (checkMultiplexSpectra)
+                {
+                    #region Looking for multiplex spectra
+                    Console.WriteLine();
+
+                    Console.WriteLine("Detecting multiplex spectra...\n");
+
+                    Console.WriteLine("Extracting MS for " + rawFile.Name);
+                    ms1SpectraFromAThermoFile = PatternTools.MSParserLight.ParserUltraLightRawFlash.Parse(rawFile.FullName, 1, (short)rawFileIndex, false, null, stdOut_console, 400).ToList();
+
+                    ms1Envelopes = new List<EnvelopeScore>[ms1SpectraFromAThermoFile.Count];
+                    DeconvolutionSimple deconvoluterMS1 = new DeconvolutionSimple(envelopePPMMS1, maxCharge);
+
+                    totalObjects = ms1SpectraFromAThermoFile.Count;
+                    Parallel.For(0, ms1SpectraFromAThermoFile.Count,
+                       index =>
+                       {
+                           (List<EnvelopeScore> theseEnvelopes, List<(double, double)> newIons) = deconvoluterMS1.DeconvoluteMS(stringency, ms1SpectraFromAThermoFile[index].Ions, false);
+                           ms1Envelopes[index] = theseEnvelopes;
+                           object_processed++;
+                           int new_progress = (int)((double)object_processed / (totalObjects) * 100);
+                           if (new_progress > old_progress)
+                           {
+                               old_progress = new_progress;
+                               Console.Write("Detecting multiplex spectra: " + old_progress + "%");
+                           }
+                       });
+
+                    #endregion
+                }
+
                 double[] totalSignal = new double[myParams.MarkerMZs.Count];
 
                 Console.WriteLine("Computing CSM quantitation...");
 
                 object progress_lock = new object();
-                int spectra_processed = 0;
-                int old_progress = 0;
-                double qtdSpectra = spectraFromAThermoFile.Count;
+                object_processed = 0;
+                old_progress = 0;
+                totalObjects = spectraFromAThermoFile.Count;
 
-                //Get info for total signal normalization
-                foreach (MSUltraLight ms in spectraFromAThermoFile)
+                int totalMultiplexSpectra = 0;
+                foreach (MSUltraLight ms2 in spectraFromAThermoFile)
                 {
-                    double[] thisQuantitation = GetIsobaricSignal(ms.Ions.Where(a => a.Item1 < 200).ToList(), myParams.MarkerMZs);
+                    if (checkMultiplexSpectra)//Checking multiplex spectra
+                    {
+                        //Find the closest ms1
+                        List<int> distances = ms1SpectraFromAThermoFile.Select(a => Math.Abs(a.ScanNumber - ms2.ScanNumber)).ToList();
+                        if (distances.Count == 0) continue;
+                        int minDistance = distances.Min();
+                        int indexOfMin = distances.IndexOf(minDistance);
+                        List<EnvelopeScore> candiates = ms1Envelopes[indexOfMin];
+
+                        candiates.RemoveAll(a => a.ChargeScoreList[0].Charge == 1);
+
+                        //Find envelopes that have the most intense peak in the isolation window
+                        //We include this 0.1 as things isolated in the limits of the isolation window are not properly isolated
+                        double isolationMin = ms2.Precursors[0].Item1 - isolationWindow + 0.1;
+                        double isolationMax = ms2.Precursors[0].Item1 + isolationWindow - 0.1;
+
+                        int numberOfPrecursor = 0;
+                        foreach (EnvelopeScore envelope in candiates)
+                        {
+                            ChargeScore cs = envelope.ChargeScoreList[0];
+                            //Verify if an isotope with intensity above 0.1 is within the isolation window
+
+                            for (float i = 0; i < cs.AcumulatedNormalizedSignal.Count; i++)
+                            {
+                                double signal = cs.AcumulatedNormalizedSignal[(int)i];
+
+                                if (signal < 0.1) { continue; } //Lets make sure we are only dealing with stuff having a minimum intensity here
+
+                                double mz = envelope.MZ + (i / (float)cs.Charge);
+
+                                if (mz > isolationMin && mz < isolationMax)
+                                {
+                                    //Make sure we are not adding the same stuff
+                                    if ((Math.Abs(ms2.Precursors[0].Item1 - mz) > 0.01) && ms2.Precursors[0].Item2 != cs.Charge)
+                                    {
+                                        numberOfPrecursor++;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        //Don't consider multiplex spectra
+                        if (numberOfPrecursor > 0)
+                        {
+                            totalMultiplexSpectra++;
+                            continue;
+                        }
+                    }
+
+                    //Get info for total signal normalization
+                    double[] thisQuantitation = GetIsobaricSignal(ms2.Ions.Where(a => a.Item1 < 200).ToList(), myParams.MarkerMZs);
                     double maxSignal = thisQuantitation.Max();
 
                     // If a signal is less than the percentage specified in the ion threshold it should become 0.  
@@ -468,7 +565,7 @@ namespace IsobaricAnalyzer
 
                     if (rawFileIndex != -1)
                     {
-                        List<CSMSearchResult> cSMSearchResults = resultsPackage.CSMSearchResults.Where(a => a.scanNumber == ms.ScanNumber && a.fileIndex == rawFileIndex).ToList();
+                        List<CSMSearchResult> cSMSearchResults = resultsPackage.CSMSearchResults.Where(a => a.scanNumber == ms2.ScanNumber && a.fileIndex == rawFileIndex).ToList();
                         if (cSMSearchResults != null && cSMSearchResults.Count > 0)
                         {
                             if (cSMSearchResults.Count == 1)
@@ -482,14 +579,14 @@ namespace IsobaricAnalyzer
                                     csmSr.quantitation = thisQuantitation.ToList();
                                 }
                             }
-                            resultsPackage.Spectra.Add(ms);
+                            resultsPackage.Spectra.Add(ms2);
                         }
                     }
 
                     lock (progress_lock)
                     {
-                        spectra_processed++;
-                        int new_progress = (int)((double)spectra_processed / (qtdSpectra) * 100);
+                        object_processed++;
+                        int new_progress = (int)((double)object_processed / (totalObjects) * 100);
                         if (new_progress > old_progress)
                         {
                             old_progress = new_progress;
@@ -510,6 +607,7 @@ namespace IsobaricAnalyzer
                     }
                 }
 
+                Console.Write("Total multiplex spectra: " + totalMultiplexSpectra);
                 Console.Write("Done!");
 
                 string theName = rawFile.Name.Substring(0, rawFile.Name.Length - 4);

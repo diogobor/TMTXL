@@ -72,16 +72,27 @@ namespace TMTXL.Results
                 row["β position"] = csm.beta_pos_xl;
                 if (true)//TMT
                 {
-                    row["126"] = Utils.Utils.RoundUp(csm.quantitation[0]);
-                    row["127N"] = Utils.Utils.RoundUp(csm.quantitation[1]);
-                    row["127C"] = Utils.Utils.RoundUp(csm.quantitation[2]);
-                    row["128N"] = Utils.Utils.RoundUp(csm.quantitation[3]);
-                    row["128C"] = Utils.Utils.RoundUp(csm.quantitation[4]);
-                    row["129N"] = Utils.Utils.RoundUp(csm.quantitation[5]);
-                    row["129C"] = Utils.Utils.RoundUp(csm.quantitation[6]);
-                    row["130N"] = Utils.Utils.RoundUp(csm.quantitation[7]);
-                    row["130C"] = Utils.Utils.RoundUp(csm.quantitation[8]);
-                    row["131"] = Utils.Utils.RoundUp(csm.quantitation[9]);
+                    row["126"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[0], 4);
+                    row["127N"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[1], 4);
+                    row["127C"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[2], 4);
+                    row["128N"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[3], 4);
+                    row["128C"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[4], 4);
+                    row["129N"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[5], 4);
+                    row["129C"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[6], 4);
+                    row["130N"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[7], 4);
+                    row["130C"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[8], 4);
+                    row["131"] = Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[9], 4);
+
+                    //row["126"] = Utils.Utils.RoundUp(csm.quantitation[0]);
+                    //row["127N"] = Utils.Utils.RoundUp(csm.quantitation[1]);
+                    //row["127C"] = Utils.Utils.RoundUp(csm.quantitation[2]);
+                    //row["128N"] = Utils.Utils.RoundUp(csm.quantitation[3]);
+                    //row["128C"] = Utils.Utils.RoundUp(csm.quantitation[4]);
+                    //row["129N"] = Utils.Utils.RoundUp(csm.quantitation[5]);
+                    //row["129C"] = Utils.Utils.RoundUp(csm.quantitation[6]);
+                    //row["130N"] = Utils.Utils.RoundUp(csm.quantitation[7]);
+                    //row["130C"] = Utils.Utils.RoundUp(csm.quantitation[8]);
+                    //row["131"] = Utils.Utils.RoundUp(csm.quantitation[9]);
                 }
                 row["Avg 1 not Null"] = Utils.Utils.RoundUp(csm.avg_notNull_1);
                 row["Avg 2 not Null"] = Utils.Utils.RoundUp(csm.avg_notNull_2);

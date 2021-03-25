@@ -41,25 +41,35 @@
             </GroupBox.Header>
             <TabControl x:Name="tabControl" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <TabItem Header="Protein-protein interaction" x:Name="TabItemPPI">
-                    <Grid>
-                        <oxy:PlotView x:Name="ppi_plot" Background="White" >
-                            <oxy:PlotView.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="Save" Click="PPIPlotMenuItemSave_Click">
-                                        <MenuItem.Icon>
-                                            <Image Source="/Results/Save-icon.png" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                </ContextMenu>
-                            </oxy:PlotView.ContextMenu>
-                        </oxy:PlotView>
-                        <DataGrid x:Name="ppi_results_datagrid" MinWidth="815" AlternatingRowBackground="WhiteSmoke" LoadingRow="results_datagrid_LoadingRow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" IsReadOnly="True" SelectionChanged="ppi_results_datagrid_SelectionChanged"/>
-                        
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1*"/>
-                            <ColumnDefinition Width="2*"/>
-                        </Grid.ColumnDefinitions>
-                    </Grid>
+                    <StackPanel Orientation="Horizontal">
+                        <GroupBox x:Name="gb_ppi_data" Margin="0,0,0,0" Padding="0">
+                            <GroupBox.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontWeight="Bold">Data</TextBlock>
+                                </StackPanel>
+                            </GroupBox.Header>
+                            <DataGrid x:Name="ppi_results_datagrid" MinWidth="400" AlternatingRowBackground="WhiteSmoke" LoadingRow="results_datagrid_LoadingRow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" IsReadOnly="True" SelectionChanged="ppi_results_datagrid_SelectionChanged"/>
+                        </GroupBox>
+
+                        <GroupBox Margin="0,0,0,0" Padding="0">
+                            <GroupBox.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock FontWeight="Bold">Volcano Plot</TextBlock>
+                                </StackPanel>
+                            </GroupBox.Header>
+                            <oxy:PlotView x:Name="ppi_plot" Background="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Controller="{Binding ChartController}">
+                                <oxy:PlotView.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Save" Click="PPIPlotMenuItemSave_Click">
+                                            <MenuItem.Icon>
+                                                <Image Source="/Results/Save-icon.png" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </oxy:PlotView.ContextMenu>
+                            </oxy:PlotView>
+                        </GroupBox>
+                    </StackPanel>
                 </TabItem>
                 <TabItem Header="Residues" x:Name="TabItemResidues">
                     <DataGrid x:Name="residues_results_datagrid" AlternatingRowBackground="WhiteSmoke" LoadingRow="results_datagrid_LoadingRow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" IsReadOnly="True"/>
@@ -72,7 +82,7 @@
                 </TabItem>
                 <TabItem Header="XL distribution" x:Name="TabItemXLVolcanoPlot">
                     <Grid>
-                        <oxy:PlotView x:Name="xl_plot" Grid.Row="1" Background="White" >
+                        <oxy:PlotView x:Name="xl_plot" Grid.Row="1" Background="White" Controller="{Binding ChartController}">
                             <oxy:PlotView.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Header="Save" Click="XLPlotMenuItemSave_Click">
@@ -87,6 +97,6 @@
                 </TabItem>
             </TabControl>
         </GroupBox>
-        
+
     </Grid>
 </Window>

@@ -1,4 +1,5 @@
 ﻿using OxyPlot;
+using OxyPlot.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using System;
@@ -30,9 +31,23 @@ namespace TMTXL.Results
 
         private List<XLSearchResult> filteredXLs;
 
+        private PlotController _ChartController;
+        public PlotController ChartController
+        {
+            get
+            {
+                _ChartController = new OxyPlot.PlotController();
+                _ChartController.Bind(new OxyPlot.OxyMouseEnterGesture(), OxyPlot.PlotCommands.HoverSnapTrack);
+                return _ChartController;
+            }
+        }
+
         public ResultsWin()
         {
             InitializeComponent();
+
+            this.DataContext = this;
+
         }
 
         private void MenuItemExit_Click(object sender, RoutedEventArgs e)
@@ -73,6 +88,8 @@ namespace TMTXL.Results
 
             foreach (CSMSearchResult csm in MyResults.CSMSearchResults.OrderByDescending(a => a.log2FoldChange).ThenByDescending(a => a.pValue))
             {
+                if (csm.quantitation == null) continue;
+
                 var row = dtCSM.NewRow();
                 row["Scan Number"] = csm.scanNumber;
                 row["File Name"] = MyResults.FileNameIndex[csm.fileIndex] + ".raw";
@@ -204,17 +221,22 @@ namespace TMTXL.Results
             dtPPI.Columns.Add("Log2(Fold Change)", typeof(double));
             dtPPI.Columns.Add("p-value", typeof(double));
 
-            foreach (ProteinProteinInteraction ppi in MyResults.PPIResults.OrderByDescending(a => a.log2FoldChange).ThenByDescending(a => a.specCount))
+            foreach (ProteinProteinInteraction ppi in MyResults.PPIResults.Where(a => a.specCount > 2).OrderByDescending(a => a.log2FoldChange).ThenByDescending(a => a.specCount))
             {
                 if (ppi.pValue == 0 && ppi.log2FoldChange == 0) continue;
+
+                IEnumerable<XLSearchResult> filteredCSMs = MyResults.XLSearchResults.Where(a => a.cSMs.Count > 2 && a.cSMs.Any(b => b.genes_alpha.Contains(ppi.gene_a) && b.genes_beta.Contains(ppi.gene_b)));
+                int countFilteredCSMs = filteredCSMs.Sum(a => a.cSMs.Count);
+                if (countFilteredCSMs == 0) continue;
+
                 var row = dtPPI.NewRow();
                 row["Gene A"] = ppi.gene_a;
                 row["Gene B"] = ppi.gene_b;
                 row["Protein A"] = ppi.protein_a;
                 row["Protein B"] = ppi.protein_b;
                 row["PPI score"] = Utils.Utils.RoundUp(ppi.score, 30);
-                row["Spec count"] = ppi.specCount;
-                row["XL count"] = MyResults.XLSearchResults.Where(a => a.cSMs.Any(b => b.genes_alpha.Contains(ppi.gene_a) && b.genes_beta.Contains(ppi.gene_b))).Count();
+                row["Spec count"] = countFilteredCSMs;
+                row["XL count"] = filteredCSMs.Count();
                 row["Log2(Fold Change)"] = Math.Round(ppi.log2FoldChange, 4);
                 row["p-value"] = Math.Round(ppi.pValue, 4);
                 dtPPI.Rows.Add(row);
@@ -230,7 +252,7 @@ namespace TMTXL.Results
         public void Setup(ResultsPackage myResults)
         {
             MyResults = myResults;
-            filteredXLs = MyResults.XLSearchResults.Where(a => a.cSMs.Count > 3).ToList();
+            filteredXLs = MyResults.XLSearchResults.Where(a => a.cSMs.Count > 2).ToList();
 
             csm_results_datagrid.ItemsSource = createDataTableCSM().AsDataView();
             xl_results_datagrid.ItemsSource = createDataTableXL().AsDataView();
@@ -255,6 +277,24 @@ namespace TMTXL.Results
                 Position = AxisPosition.Bottom,
                 Title = "-Log(p-value)"
             });
+
+
+            var pointAnnotationWT = new PointAnnotation()
+            {
+                X = 0.015,
+                Y = plotModel1.Axes[0].ActualMinimum + 0.5,
+                Text = "WT",
+                Shape = MarkerType.None
+            };
+            var pointAnnotationControl = new PointAnnotation()
+            {
+                X = 0.03,
+                Y = plotModel1.Axes[0].ActualMaximum - 0.5,
+                Text = "Control",
+                Shape = MarkerType.None
+            };
+            plotModel1.Annotations.Add(pointAnnotationWT);
+            plotModel1.Annotations.Add(pointAnnotationControl);
 
 
             var Greenseries = new ScatterSeries { MarkerType = MarkerType.Circle };
@@ -497,12 +537,12 @@ namespace TMTXL.Results
                             yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                     }
 
-                    if (maxPvalue < pValue) maxPvalue = pValue;
                 }
                 else
                 {
-                    grayPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 1));
+                    grayPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                 }
+                if (maxPvalue < pValue) maxPvalue = pValue;
             }
 
             zeroLine.Points.Add(new OxyPlot.DataPoint(0, 0));
@@ -529,6 +569,7 @@ namespace TMTXL.Results
             plotModel1.Series.Add(foldChangeLowerThresholdLine);
 
             ppi_plot.Model = plotModel1;
+            ppi_plot.Width = tabControl.ActualWidth - gb_ppi_data.ActualWidth - 20;
         }
         private string GetSelectedValue(DataGrid grid, int columnIndex = 0)
         {
