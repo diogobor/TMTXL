@@ -391,34 +391,39 @@ namespace IsobaricAnalyzer
             string current_fileNme = rawFile.Name.Substring(0, rawFile.Name.Length - rawFile.Extension.Length);
             int rawFileIndex = resultsPackage.FileNameIndex.IndexOf(current_fileNme);
 
-            Console.WriteLine("Extracting MS3 for " + rawFile.Name);
+            Console.Write("Detecting MS3 spectra ... ");
             List<PatternTools.MSParserLight.MSUltraLight> ms3pectraFromAThermoFile = PatternTools.MSParserLight.ParserUltraLightRawFlash.Parse(rawFile.FullName, 3, (short)rawFileIndex, false, null, stdOut_console, 400).ToList();
 
             if (ms3pectraFromAThermoFile.Count == 0) return;
 
-            Console.Write("Detecting SPS-MS3 spectra ... ");
 
             int object_processed = 0;
             int old_progress = 0;
             double totalObjects = ms3pectraFromAThermoFile.Count;
 
-            foreach (PatternTools.MSParserLight.MSUltraLight ms3 in ms3pectraFromAThermoFile)
-            {
-                MSUltraLight ms2 = ms2pectraFromAThermoFile.Where(a => a.ScanNumber == ms3.PrecursorScanNumber).FirstOrDefault();
-                if (ms2 == null) continue;
+            Parallel.ForEach(ms3pectraFromAThermoFile,
+                  new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+                  ms3 =>
 
-                ms2.Ions.AddRange(from ion in ms3.Ions.AsParallel()
-                                  select Tuple.Create(ion.MZ, ion.Intensity));
-                ms2.Ions = ms2.Ions.Distinct().ToList();
-                ms2.Ions.Sort();
-                object_processed++;
-                int new_progress = (int)((double)object_processed / (totalObjects) * 100);
-                if (new_progress > old_progress)
-                {
-                    old_progress = new_progress;
-                    Console.Write("Processing SPS-MS3 spectra: " + old_progress + "%");
-                }
-            }
+                  //foreach (PatternTools.MSParserLight.MSUltraLight ms3 in ms3pectraFromAThermoFile)
+                  {
+                      MSUltraLight ms2 = ms2pectraFromAThermoFile.Where(a => a.ScanNumber == ms3.PrecursorScanNumber).FirstOrDefault();
+                      if (ms2 != null)
+                      {
+                          ms2.Ions.AddRange(from ion in ms3.Ions.AsParallel()
+                                            select Tuple.Create(ion.MZ, ion.Intensity));
+                          ms2.Ions = ms2.Ions.Distinct().ToList();
+                          ms2.Ions.Sort();
+                          object_processed++;
+                          int new_progress = (int)((double)object_processed / (totalObjects) * 100);
+                          if (new_progress > old_progress)
+                          {
+                              old_progress = new_progress;
+                              Console.Write("Processing SPS-MS3 spectra: " + old_progress + "%");
+                          }
+                      }
+                  }
+            );
         }
 
         /// <summary>

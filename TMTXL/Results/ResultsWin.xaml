@@ -95,6 +95,21 @@
                         </oxy:PlotView>
                     </Grid>
                 </TabItem>
+                <TabItem Header="PPI distribution" x:Name="TabItemPPIVolcanoPlot">
+                    <Grid>
+                        <oxy:PlotView x:Name="ppiAll_plot" Grid.Row="1" Background="White" Controller="{Binding ChartController}">
+                            <oxy:PlotView.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Save" Click="PPIAllPlotMenuItemSave_Click">
+                                        <MenuItem.Icon>
+                                            <Image Source="/Results/Save-icon.png" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </oxy:PlotView.ContextMenu>
+                        </oxy:PlotView>
+                    </Grid>
+                </TabItem>
             </TabControl>
         </GroupBox>
 
