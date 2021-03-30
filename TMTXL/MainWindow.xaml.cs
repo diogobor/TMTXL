@@ -262,6 +262,7 @@ namespace TMTXL
             myParams.IDdir = results_dir.Text;
             myParams.PurityCorrectionMatrix = GetPurityCorrectionsFromForm();
             myParams.ClassLabels = class_label_textbox.Text;
+            myParams.ControlChannel = control_channel_combobox.SelectedIndex;
             try
             {
                 myParams.IsobaricMassess = Regex.Split(isobaric_masses_label_textbox.Text, " ").Select(a => double.Parse(a)).ToList();
@@ -270,7 +271,7 @@ namespace TMTXL
             {
             }
             myParams.SPSMS3 = (bool)checkbox_sps_ms3.IsChecked;
-            myParams.ChemicalLabel = comboBoxPurityDefaults.SelectedValue.ToString();
+            myParams.ChemicalLabel = ((ComboBoxItem)comboBoxPurityDefaults.SelectedValue).Content.ToString();
             return myParams;
         }
 

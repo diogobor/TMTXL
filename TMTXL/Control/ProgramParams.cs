@@ -24,6 +24,8 @@ namespace TMTXL.Control
         public bool SPSMS3 { get; set; }
         [ProtoMember(6)]
         public string ChemicalLabel { get; set; }
+        [ProtoMember(7)]
+        public int ControlChannel { get; set; }
 
         /// <summary>
         /// Empty constructor

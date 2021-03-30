@@ -884,7 +884,7 @@ namespace TMTXL.Results
             if (current_xlSeachResult == null) return;
 
             ChannelComparison channelComparison = new ChannelComparison();
-            channelComparison.Setup(current_xlSeachResult, MyResults.FileNameIndex);
+            channelComparison.Setup(current_xlSeachResult, MyResults.FileNameIndex, MyResults.Params);
             channelComparison.ShowDialog();
         }
 
