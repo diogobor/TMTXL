@@ -588,6 +588,12 @@ namespace IsobaricAnalyzer
                     double[] thisQuantitation = GetIsobaricSignal(ms2.Ions.Where(a => a.Item1 < 200).ToList(), myParams.MarkerMZs);
                     double maxSignal = thisQuantitation.Max();
 
+                    //We can only correct for signal for those that have quantitation values in all places    
+                    if (myParams.NormalizationPurityCorrection && (thisQuantitation.Count(a => a > 0) == myParams.MarkerMZs.Count))
+                    {
+                        thisQuantitation = IsobaricImpurityCorrection.CorrectForSignal(purityCorrectionsMatrix, thisQuantitation).ToArray();
+                    }
+                    
                     // If a signal is less than the percentage specified in the ion threshold it should become 0.  
                     for (int i = 0; i < thisQuantitation.Length; i++)
                     {
@@ -595,12 +601,6 @@ namespace IsobaricAnalyzer
                         {
                             thisQuantitation[i] = 0;
                         }
-                    }
-
-                    //We can only correct for signal for those that have quantitation values in all places    
-                    if (myParams.NormalizationPurityCorrection && (thisQuantitation.Count(a => a > 0) == myParams.MarkerMZs.Count))
-                    {
-                        thisQuantitation = IsobaricImpurityCorrection.CorrectForSignal(purityCorrectionsMatrix, thisQuantitation).ToArray();
                     }
 
                     for (int i = 0; i < thisQuantitation.Length; i++)
