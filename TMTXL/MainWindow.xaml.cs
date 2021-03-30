@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using TMTXL.Control;
 using TMTXL.Results;
@@ -33,6 +36,8 @@ namespace TMTXL
 
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
             dispatcherTimer.Interval = new TimeSpan(0, 0, 2);
+
+            this.DataContext = new OpenResultsBrowserCommandContext();
         }
 
         private void dispatcherTimer_Tick(object sender, EventArgs e)
@@ -55,7 +60,8 @@ namespace TMTXL
                     results_dir.IsEnabled = true;
                     raw_files_btn.IsEnabled = true;
                     results_btn.IsEnabled = true;
-                    tabControl.IsEnabled = true;
+                    dataGridPurityCorrections.IsEnabled = true;
+                    comboBoxPurityDefaults.IsEnabled = true;
                     #endregion
 
                     run_btn_text.Text = "Run";
@@ -90,6 +96,11 @@ namespace TMTXL
         private void MenuItemExit_Click(object sender, RoutedEventArgs e)
         {
             System.Environment.Exit(1);
+        }
+
+        private void MenuItemResultBrowser_Click(object sender, RoutedEventArgs e)
+        {
+            new OpenResultBrowserKey().Execute(sender);
         }
 
         private void raw_files_btn_Click(object sender, RoutedEventArgs e)
@@ -133,7 +144,8 @@ namespace TMTXL
                 results_dir.IsEnabled = false;
                 raw_files_btn.IsEnabled = false;
                 results_btn.IsEnabled = false;
-                tabControl.IsEnabled = false;
+                dataGridPurityCorrections.IsEnabled = false;
+                comboBoxPurityDefaults.IsEnabled = false;
                 #endregion
 
                 run_btn_text.Text = "Stop";
@@ -151,7 +163,8 @@ namespace TMTXL
                     results_dir.IsEnabled = true;
                     raw_files_btn.IsEnabled = true;
                     results_btn.IsEnabled = true;
-                    tabControl.IsEnabled = true;
+                    dataGridPurityCorrections.IsEnabled = true;
+                    comboBoxPurityDefaults.IsEnabled = true;
                     #endregion
 
                     run_btn_text.Text = "Run";
@@ -248,7 +261,16 @@ namespace TMTXL
             myParams.RawFilesDir = raw_files_dir.Text;
             myParams.IDdir = results_dir.Text;
             myParams.PurityCorrectionMatrix = GetPurityCorrectionsFromForm();
-
+            myParams.ClassLabels = class_label_textbox.Text;
+            try
+            {
+                myParams.IsobaricMassess = Regex.Split(isobaric_masses_label_textbox.Text, " ").Select(a => double.Parse(a)).ToList();
+            }
+            catch (Exception)
+            {
+            }
+            myParams.SPSMS3 = (bool)checkbox_sps_ms3.IsChecked;
+            myParams.ChemicalLabel = comboBoxPurityDefaults.SelectedValue.ToString();
             return myParams;
         }
 
@@ -286,6 +308,16 @@ namespace TMTXL
                 Console.WriteLine("ERROR: No labeling kit in the purity correction tab has been selected.");
                 System.Windows.MessageBox.Show(
                         "Please select the labeling kit in the purity correction tab.",
+                        "Warning",
+                        (MessageBoxButton)MessageBoxButtons.OK,
+                        (MessageBoxImage)MessageBoxIcon.Warning);
+                return false;
+            }
+
+            if (String.IsNullOrEmpty(class_label_textbox.Text)){
+                Console.WriteLine("ERROR: No class label has been defined.");
+                System.Windows.MessageBox.Show(
+                        "Please set the classes labels on 'Advanced Parameters' tab.",
                         "Warning",
                         (MessageBoxButton)MessageBoxButtons.OK,
                         (MessageBoxImage)MessageBoxIcon.Warning);
@@ -333,6 +365,16 @@ namespace TMTXL
                     dr4.ItemArray = new object[] { "117", 0.1, 4, 3.5, 0.1 };
                     dt.Rows.Add(dr4);
 
+                    class_label_textbox.Text = "1 1 2 2";
+
+                    control_channel_combobox.Items.Clear();
+                    control_channel_combobox.Items.Add("114");
+                    control_channel_combobox.Items.Add("115");
+                    control_channel_combobox.Items.Add("116");
+                    control_channel_combobox.Items.Add("117");
+                    control_channel_combobox.SelectedIndex = 0;
+
+                    isobaric_masses_label_textbox.Text = "114.1 115.1 116.1 117.1";
                     break;
                 case "TMT 6":
 
@@ -359,6 +401,20 @@ namespace TMTXL
                     DataRow dr6TMT131 = dt.NewRow();
                     dr6TMT131.ItemArray = new object[] { "131", 0.1, 4.1, 4.7, 0.1 };
                     dt.Rows.Add(dr6TMT131);
+
+                    class_label_textbox.Text = "1 1 1 2 2 2";
+
+                    control_channel_combobox.Items.Clear();
+                    control_channel_combobox.Items.Add("126");
+                    control_channel_combobox.Items.Add("127");
+                    control_channel_combobox.Items.Add("128");
+                    control_channel_combobox.Items.Add("129");
+                    control_channel_combobox.Items.Add("130");
+                    control_channel_combobox.Items.Add("131");
+                    control_channel_combobox.SelectedIndex = 0;
+
+                    isobaric_masses_label_textbox.Text = "126.1277 127.1247 128.1344 129.1315 130.1411 131.1382";
+
                     break;
 
                 case "TMT 10":
@@ -402,6 +458,23 @@ namespace TMTXL
                     DataRow dr10TMT131 = dt.NewRow();
                     dr10TMT131.ItemArray = new object[] { "131", 0, 3.2, 3.7, 0 };
                     dt.Rows.Add(dr10TMT131);
+
+                    class_label_textbox.Text = "1 1 1 1 1 2 2 2 2 2";
+
+                    control_channel_combobox.Items.Clear();
+                    control_channel_combobox.Items.Add("126");
+                    control_channel_combobox.Items.Add("127N");
+                    control_channel_combobox.Items.Add("127C");
+                    control_channel_combobox.Items.Add("128N");
+                    control_channel_combobox.Items.Add("128C");
+                    control_channel_combobox.Items.Add("129N");
+                    control_channel_combobox.Items.Add("129C");
+                    control_channel_combobox.Items.Add("130N");
+                    control_channel_combobox.Items.Add("130C");
+                    control_channel_combobox.Items.Add("131");
+                    control_channel_combobox.SelectedIndex = 0;
+
+                    isobaric_masses_label_textbox.Text = "126.127726 127.124761 127.131081 128.128116 128.134436 129.131471 129.137790 130.134825 130.141145 131.138180";
 
                     break;
 
@@ -471,6 +544,29 @@ namespace TMTXL
                     DataRow dr16TMT134 = dt.NewRow();
                     dr16TMT134.ItemArray = new object[] { "134", 0, 4.82, 0.86, 0 };
                     dt.Rows.Add(dr16TMT134);
+
+                    class_label_textbox.Text = "1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2";
+
+                    control_channel_combobox.Items.Clear();
+                    control_channel_combobox.Items.Add("126");
+                    control_channel_combobox.Items.Add("127N");
+                    control_channel_combobox.Items.Add("127C");
+                    control_channel_combobox.Items.Add("128N");
+                    control_channel_combobox.Items.Add("128C");
+                    control_channel_combobox.Items.Add("129N");
+                    control_channel_combobox.Items.Add("129C");
+                    control_channel_combobox.Items.Add("130N");
+                    control_channel_combobox.Items.Add("130C");
+                    control_channel_combobox.Items.Add("131N");
+                    control_channel_combobox.Items.Add("131C");
+                    control_channel_combobox.Items.Add("132N");
+                    control_channel_combobox.Items.Add("132C");
+                    control_channel_combobox.Items.Add("133N");
+                    control_channel_combobox.Items.Add("133C");
+                    control_channel_combobox.Items.Add("134");
+                    control_channel_combobox.SelectedIndex = 0;
+
+                    isobaric_masses_label_textbox.Text = "126.127726 127.124761 127.131081 128.128116 128.134436 129.131471 129.137790 130.134825 130.141145 131.138180 131.1445 132.14153 132.14785 133.14489 133.15121 134.14824";
                     break;
 
             }
@@ -478,13 +574,12 @@ namespace TMTXL
             dataGridPurityCorrections.ItemsSource = new DataView(dt);
         }
 
-        private void MenuItemResultBrowser_Click(object sender, RoutedEventArgs e)
+        private void CommandBindingOpen_CanExecute(object sender, System.Windows.Input.CanExecuteRoutedEventArgs e)
         {
-            ResultsWin resultsWin = new ResultsWin();
-            resultsWin.ShowDialog();
+            e.CanExecute = true;
         }
 
-        private void MenuItemLoad_Click(object sender, RoutedEventArgs e)
+        private void CommandBindingOpen_Executed(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
         {
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
             dlg.FileName = ""; // Default file name
@@ -509,6 +604,33 @@ namespace TMTXL
                     Console.WriteLine("ERROR: " + exc.Message);
                     System.Windows.Forms.MessageBox.Show("Failed to load!", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                 }
+            }
+        }
+    }
+
+    public class OpenResultBrowserKey : ICommand
+    {
+        public event EventHandler CanExecuteChanged;
+
+        public bool CanExecute(object parameter)
+        {
+            return true;
+        }
+
+        public void Execute(object parameter)
+        {
+            ResultsWin resultsWin = new ResultsWin();
+            resultsWin.ShowDialog();
+        }
+    }
+
+    public class OpenResultsBrowserCommandContext
+    {
+        public ICommand OpenResultsBrowserCommand
+        {
+            get
+            {
+                return new OpenResultBrowserKey();
             }
         }
     }

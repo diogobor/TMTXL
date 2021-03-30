@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,6 +28,7 @@ namespace TMTXL.Results
     /// </summary>
     public partial class ResultsWin : Window
     {
+        
         private ResultsPackage MyResults;
 
         private List<XLSearchResult> filteredXLs;
@@ -72,22 +74,63 @@ namespace TMTXL.Results
             dtCSM.Columns.Add("β peptide");
             dtCSM.Columns.Add("α position", typeof(int));
             dtCSM.Columns.Add("β position", typeof(int));
-            dtCSM.Columns.Add("126", typeof(double));
-            dtCSM.Columns.Add("127N", typeof(double));
-            dtCSM.Columns.Add("127C", typeof(double));
-            dtCSM.Columns.Add("128N", typeof(double));
-            dtCSM.Columns.Add("128C", typeof(double));
-            dtCSM.Columns.Add("129N", typeof(double));
-            dtCSM.Columns.Add("129C", typeof(double));
-            dtCSM.Columns.Add("130N", typeof(double));
-            dtCSM.Columns.Add("130C", typeof(double));
-            dtCSM.Columns.Add("131", typeof(double));
-            dtCSM.Columns.Add("Avg 1 not Null", typeof(double));
-            dtCSM.Columns.Add("Avg 2 not Null", typeof(double));
-            dtCSM.Columns.Add("Log2(Fold Change)", typeof(double));
-            dtCSM.Columns.Add("p-value", typeof(double));
+            switch (MyResults.Params.ChemicalLabel)
+            {
+                case "iTRAQ 4":
+                    dtCSM.Columns.Add("114", typeof(double));
+                    dtCSM.Columns.Add("115", typeof(double));
+                    dtCSM.Columns.Add("116", typeof(double));
+                    dtCSM.Columns.Add("117", typeof(double));
+                    break;
+                case "TMT 6":
+                    dtCSM.Columns.Add("126", typeof(double));
+                    dtCSM.Columns.Add("127", typeof(double));
+                    dtCSM.Columns.Add("128", typeof(double));
+                    dtCSM.Columns.Add("129", typeof(double));
+                    dtCSM.Columns.Add("130", typeof(double));
+                    dtCSM.Columns.Add("131", typeof(double));
+                    break;
+                case "TMT 10":
+                    dtCSM.Columns.Add("126", typeof(double));
+                    dtCSM.Columns.Add("127N", typeof(double));
+                    dtCSM.Columns.Add("127C", typeof(double));
+                    dtCSM.Columns.Add("128N", typeof(double));
+                    dtCSM.Columns.Add("128C", typeof(double));
+                    dtCSM.Columns.Add("129N", typeof(double));
+                    dtCSM.Columns.Add("129C", typeof(double));
+                    dtCSM.Columns.Add("130N", typeof(double));
+                    dtCSM.Columns.Add("130C", typeof(double));
+                    dtCSM.Columns.Add("131", typeof(double));
+                    break;
+                case "TMT 16":
+                    dtCSM.Columns.Add("126", typeof(double));
+                    dtCSM.Columns.Add("127N", typeof(double));
+                    dtCSM.Columns.Add("127C", typeof(double));
+                    dtCSM.Columns.Add("128N", typeof(double));
+                    dtCSM.Columns.Add("128C", typeof(double));
+                    dtCSM.Columns.Add("129N", typeof(double));
+                    dtCSM.Columns.Add("129C", typeof(double));
+                    dtCSM.Columns.Add("130N", typeof(double));
+                    dtCSM.Columns.Add("130C", typeof(double));
+                    dtCSM.Columns.Add("131N", typeof(double));
+                    dtCSM.Columns.Add("131C", typeof(double));
+                    dtCSM.Columns.Add("132N", typeof(double));
+                    dtCSM.Columns.Add("132C", typeof(double));
+                    dtCSM.Columns.Add("133N", typeof(double));
+                    dtCSM.Columns.Add("133C", typeof(double));
+                    dtCSM.Columns.Add("134", typeof(double));
+                    break;
+            }
 
-            foreach (CSMSearchResult csm in MyResults.CSMSearchResults.OrderByDescending(a => a.log2FoldChange).ThenByDescending(a => a.pValue))
+            int qtdUniqueClass = Regex.Split(MyResults.Params.ClassLabels, " ").Distinct().Count();
+            for (int i = 1; i <= qtdUniqueClass; i++)
+                dtCSM.Columns.Add("Avg " + i + " not Null", typeof(double));
+            for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                dtCSM.Columns.Add("Log2(Fold Change)" + i, typeof(double));
+            for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                dtCSM.Columns.Add("p-value" + i, typeof(double));
+
+            foreach (CSMSearchResult csm in MyResults.CSMSearchResults.OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.pValue[0]))
             {
                 if (csm.quantitation == null) continue;
 
@@ -100,35 +143,63 @@ namespace TMTXL.Results
                 row["β peptide"] = csm.beta_peptide;
                 row["α position"] = csm.alpha_pos_xl;
                 row["β position"] = csm.beta_pos_xl;
-                if (true)//TMT
+
+                switch (MyResults.Params.ChemicalLabel)
                 {
-                    row["126"] = csm.quantitation[0];
-                    row["127N"] = csm.quantitation[1];
-                    row["127C"] = csm.quantitation[2];
-                    row["128N"] = csm.quantitation[3];
-                    row["128C"] = csm.quantitation[4];
-                    row["129N"] = csm.quantitation[5];
-                    row["129C"] = csm.quantitation[6];
-                    row["130N"] = csm.quantitation[7];
-                    row["130C"] = csm.quantitation[8];
-                    row["131"] = csm.quantitation[9];
-
-
-                    //row["126"] = csm.quantitation[0] > 0 ? Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[0], 4) : 0;
-                    //row["127N"] = csm.quantitation[1] > 0 ? Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[1], 4) : 0;
-                    //row["127C"] = csm.quantitation[2] > 0 ? Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[2], 4) : 0;
-                    //row["128N"] = csm.quantitation[3] > 0 ? Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[3], 4) : 0;
-                    //row["128C"] = csm.quantitation[4] > 0 ? Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[4], 4) : 0;
-                    //row["129N"] = csm.quantitation[5] > 0 ? Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[5], 4) : 0;
-                    //row["129C"] = csm.quantitation[6] > 0 ? Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[6], 4) : 0;
-                    //row["130N"] = csm.quantitation[7] > 0 ? Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[7], 4) : 0;
-                    //row["130C"] = csm.quantitation[8] > 0 ? Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[8], 4) : 0;
-                    //row["131"] = csm.quantitation[9] > 0 ? Utils.Utils.RoundUp(csm.quantitation[0] / csm.quantitation[9], 4) : 0;
+                    case "iTRAQ 4":
+                        row["114"] = csm.quantitation[0];
+                        row["115"] = csm.quantitation[1];
+                        row["116"] = csm.quantitation[2];
+                        row["117"] = csm.quantitation[3];
+                        break;
+                    case "TMT 6":
+                        row["126"] = csm.quantitation[0];
+                        row["127"] = csm.quantitation[1];
+                        row["128"] = csm.quantitation[2];
+                        row["129"] = csm.quantitation[3];
+                        row["130"] = csm.quantitation[4];
+                        row["131"] = csm.quantitation[5];
+                        break;
+                    case "TMT 10":
+                        row["126"] = csm.quantitation[0];
+                        row["127N"] = csm.quantitation[1];
+                        row["127C"] = csm.quantitation[2];
+                        row["128N"] = csm.quantitation[3];
+                        row["128C"] = csm.quantitation[4];
+                        row["129N"] = csm.quantitation[5];
+                        row["129C"] = csm.quantitation[6];
+                        row["130N"] = csm.quantitation[7];
+                        row["130C"] = csm.quantitation[8];
+                        row["131"] = csm.quantitation[9];
+                        break;
+                    case "TMT 16":
+                        row["126"] = csm.quantitation[0];
+                        row["127N"] = csm.quantitation[1];
+                        row["127C"] = csm.quantitation[2];
+                        row["128N"] = csm.quantitation[3];
+                        row["128C"] = csm.quantitation[4];
+                        row["129N"] = csm.quantitation[5];
+                        row["129C"] = csm.quantitation[6];
+                        row["130N"] = csm.quantitation[7];
+                        row["130C"] = csm.quantitation[8];
+                        row["131N"] = csm.quantitation[9];
+                        row["131C"] = csm.quantitation[10];
+                        row["132N"] = csm.quantitation[11];
+                        row["132C"] = csm.quantitation[12];
+                        row["133N"] = csm.quantitation[13];
+                        row["133C"] = csm.quantitation[14];
+                        row["134"] = csm.quantitation[15];
+                        break;
                 }
-                row["Avg 1 not Null"] = Utils.Utils.RoundUp(csm.avg_notNull_1);
-                row["Avg 2 not Null"] = Utils.Utils.RoundUp(csm.avg_notNull_2);
-                row["Log2(Fold Change)"] = Math.Round(csm.log2FoldChange, 4);
-                row["p-value"] = Math.Round(csm.pValue, 4);
+
+                for (int i = 1; i <= qtdUniqueClass; i++)
+                    row["Avg " + i + " not Null"] = Utils.Utils.RoundUp(csm.avg_notNull[i - 1]);
+
+                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                {
+                    row["Log2(Fold Change)" + i] = Math.Round(csm.log2FoldChange[i - 1], 4);
+                    row["p-value" + i] = Math.Round(csm.pValue[i - 1], 4);
+                }
                 dtCSM.Rows.Add(row);
             }
 
@@ -151,10 +222,13 @@ namespace TMTXL.Results
             dtXL.Columns.Add("α position", typeof(int));
             dtXL.Columns.Add("β position", typeof(int));
             dtXL.Columns.Add("Spec count", typeof(int));
-            dtXL.Columns.Add("Log2(Fold Change)", typeof(double));
-            dtXL.Columns.Add("p-value", typeof(double));
+            int qtdUniqueClass = Regex.Split(MyResults.Params.ClassLabels, " ").Distinct().Count();
+            for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                dtXL.Columns.Add("Log2(Fold Change)" + i, typeof(double));
+            for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                dtXL.Columns.Add("p-value" + i, typeof(double));
 
-            foreach (XLSearchResult xl in MyResults.XLSearchResults.OrderByDescending(a => a.log2FoldChange).ThenByDescending(a => a.cSMs.Count))
+            foreach (XLSearchResult xl in MyResults.XLSearchResults.OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.cSMs.Count))
             {
                 var row = dtXL.NewRow();
                 row["Gene A"] = String.Join(" ,", xl.cSMs[0].genes_alpha);
@@ -164,8 +238,12 @@ namespace TMTXL.Results
                 row["α position"] = xl.cSMs[0].alpha_pept_xl_pos;
                 row["β position"] = xl.cSMs[0].beta_pept_xl_pos;
                 row["Spec count"] = xl.cSMs.Count;
-                row["Log2(Fold Change)"] = Math.Round(xl.log2FoldChange, 4);
-                row["p-value"] = Math.Round(xl.pValue, 4);
+
+                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                {
+                    row["Log2(Fold Change)" + i] = Math.Round(xl.log2FoldChange[i - 1], 4);
+                    row["p-value" + i] = Math.Round(xl.pValue[i - 1], 4);
+                }
                 dtXL.Rows.Add(row);
             }
 
@@ -186,10 +264,13 @@ namespace TMTXL.Results
             dtResidues.Columns.Add("α position", typeof(int));
             dtResidues.Columns.Add("β position", typeof(int));
             dtResidues.Columns.Add("Spec count", typeof(int));
-            dtResidues.Columns.Add("Log2(Fold Change)", typeof(double));
-            dtResidues.Columns.Add("p-value", typeof(double));
+            int qtdUniqueClass = Regex.Split(MyResults.Params.ClassLabels, " ").Distinct().Count();
+            for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                dtResidues.Columns.Add("Log2(Fold Change)" + i, typeof(double));
+            for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                dtResidues.Columns.Add("p-value" + i, typeof(double));
 
-            foreach (XLSearchResult xl in MyResults.ResidueSearchResults.OrderByDescending(a => a.log2FoldChange).ThenByDescending(a => a.cSMs.Count))
+            foreach (XLSearchResult xl in MyResults.ResidueSearchResults.OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.cSMs.Count))
             {
                 var row = dtResidues.NewRow();
                 row["Gene A"] = xl.cSMs[0].genes_alpha[0];
@@ -197,8 +278,12 @@ namespace TMTXL.Results
                 row["α position"] = xl.cSMs[0].alpha_pept_xl_pos;
                 row["β position"] = xl.cSMs[0].beta_pept_xl_pos;
                 row["Spec count"] = xl.cSMs.Count;
-                row["Log2(Fold Change)"] = Math.Round(xl.log2FoldChange, 4);
-                row["p-value"] = Math.Round(xl.pValue, 4);
+                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                {
+                    row["Log2(Fold Change)" + i] = Math.Round(xl.log2FoldChange[i - 1], 4);
+                    row["p-value" + i] = Math.Round(xl.pValue[i - 1], 4);
+                }
+
                 dtResidues.Rows.Add(row);
             }
 
@@ -220,12 +305,15 @@ namespace TMTXL.Results
             dtPPI.Columns.Add("PPI score", typeof(double));
             dtPPI.Columns.Add("XL count", typeof(int));
             dtPPI.Columns.Add("Spec count", typeof(int));
-            dtPPI.Columns.Add("Log2(Fold Change)", typeof(double));
-            dtPPI.Columns.Add("p-value", typeof(double));
+            int qtdUniqueClass = Regex.Split(MyResults.Params.ClassLabels, " ").Distinct().Count();
+            for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                dtPPI.Columns.Add("Log2(Fold Change)" + i, typeof(double));
+            for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                dtPPI.Columns.Add("p-value" + i, typeof(double));
 
-            foreach (ProteinProteinInteraction ppi in MyResults.PPIResults.Where(a => a.specCount > 2).OrderByDescending(a => a.log2FoldChange).ThenByDescending(a => a.specCount))
+            foreach (ProteinProteinInteraction ppi in MyResults.PPIResults.Where(a => a.specCount > 2).OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.specCount))
             {
-                if (ppi.pValue == 0 && ppi.log2FoldChange == 0) continue;
+                if (ppi.pValue[0] == 0 && ppi.log2FoldChange[0] == 0) continue;
 
                 IEnumerable<XLSearchResult> filteredCSMs = MyResults.XLSearchResults.Where(a => a.cSMs.Count > 2 && a.cSMs.Any(b => b.genes_alpha.Contains(ppi.gene_a) && b.genes_beta.Contains(ppi.gene_b)));
                 int countFilteredCSMs = filteredCSMs.Sum(a => a.cSMs.Count);
@@ -239,8 +327,11 @@ namespace TMTXL.Results
                 row["PPI score"] = Utils.Utils.RoundUp(ppi.score, 30);
                 row["Spec count"] = countFilteredCSMs;
                 row["XL count"] = filteredCSMs.Count();
-                row["Log2(Fold Change)"] = Math.Round(ppi.log2FoldChange, 4);
-                row["p-value"] = Math.Round(ppi.pValue, 4);
+                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                {
+                    row["Log2(Fold Change)" + i] = Math.Round(ppi.log2FoldChange[i - 1], 4);
+                    row["p-value" + i] = Math.Round(ppi.pValue[i - 1], 4);
+                }
                 dtPPI.Rows.Add(row);
             }
 
@@ -261,6 +352,7 @@ namespace TMTXL.Results
             xl_results_datagrid.ItemsSource = createDataTableXL().AsDataView();
             residues_results_datagrid.ItemsSource = createDataTableResidue().AsDataView();
             ppi_results_datagrid.ItemsSource = createDataTablePPI().AsDataView();
+            ppi_results_datagrid.MaxWidth = tabControl.ActualWidth / 2;
 
             plotXLDistribution();
             plotPPIAllDistribution();
@@ -351,10 +443,10 @@ namespace TMTXL.Results
             foreach (XLSearchResult xl in MyResults.XLSearchResults)
             {
                 //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
-                if (xl.pValue == 0.5) { continue; }
+                if (xl.pValue[0] == 0.5) { continue; }
 
-                double avgLogFold = xl.log2FoldChange;
-                double pValue = Math.Log(xl.pValue, 10) * (-1);
+                double avgLogFold = xl.log2FoldChange[0];
+                double pValue = Math.Log(xl.pValue[0], 10) * (-1);
 
                 if (avgLogFold < -3) { avgLogFold = -3; }
                 if (avgLogFold > 3) { avgLogFold = 3; }
@@ -512,10 +604,10 @@ namespace TMTXL.Results
             foreach (ProteinProteinInteraction ppi in MyResults.PPIResults)
             {
                 //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
-                if (ppi.pValue == 0.5 || ppi.pValue == 0) { continue; }
+                if (ppi.pValue == null || ppi.pValue[0] == 0.5) { continue; }
 
-                double avgLogFold = ppi.log2FoldChange;
-                double pValue = Math.Log(ppi.pValue, 10) * (-1);
+                double avgLogFold = ppi.log2FoldChange[0];
+                double pValue = Math.Log(ppi.pValue[0], 10) * (-1);
 
                 if (avgLogFold < -3) { avgLogFold = -3; }
                 if (avgLogFold > 3) { avgLogFold = 3; }
@@ -657,10 +749,10 @@ namespace TMTXL.Results
             foreach (XLSearchResult xl in xlSearchResults)
             {
                 //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
-                if (xl.pValue == 0.5) { continue; }
+                if (xl.pValue[0] == 0.5) { continue; }
 
-                double avgLogFold = xl.log2FoldChange;
-                double pValue = Math.Log(xl.pValue, 10) * (-1);
+                double avgLogFold = xl.log2FoldChange[0];
+                double pValue = Math.Log(xl.pValue[0], 10) * (-1);
 
                 if (avgLogFold < -3) { avgLogFold = -3; }
                 if (avgLogFold > 3) { avgLogFold = 3; }
@@ -715,6 +807,7 @@ namespace TMTXL.Results
 
             ppi_plot.Model = plotModel1;
             ppi_plot.Width = tabControl.ActualWidth - gb_ppi_data.ActualWidth - 20;
+
         }
         private string GetSelectedValue(DataGrid grid, int columnIndex = 0)
         {
@@ -763,67 +856,6 @@ namespace TMTXL.Results
             double ppm = 450;
             svf.PlotSpectrum(ions, ppm, "", PatternTools.PTMMods.DefaultModifications.TheModifications, false, IonA, IonB, IonC, IonX, IonY, IonZ, ms.Precursors[0].Item2);
             svf.ShowDialog();
-        }
-
-        private void MenuItemSave_Click(object sender, RoutedEventArgs e)
-        {
-            if (MyResults == null || MyResults.CSMSearchResults == null || MyResults.CSMSearchResults.Count == 0)
-            {
-                System.Windows.Forms.MessageBox.Show("There is no data to be processed!", "Warning", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
-                return;
-            }
-
-            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-            dlg.FileName = ""; // Default file name
-            dlg.Filter = "TMTXL results (*.tmtxl)|*.tmtxl"; // Filter files by extension
-            dlg.Title = "Save results";
-
-            // Show open file dialog box
-            Nullable<bool> result = dlg.ShowDialog();
-
-            if (result == true)
-            {
-                string FileName = dlg.FileName;
-
-                try
-                {
-                    MyResults.SerializeResults(FileName);
-                    System.Windows.Forms.MessageBox.Show("The results have been saved successfully!", "Information", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
-                }
-                catch (Exception exc)
-                {
-                    Console.WriteLine("ERROR: " + exc.Message);
-                    System.Windows.Forms.MessageBox.Show("Failed to save!", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
-                }
-            }
-        }
-
-        private void MenuItemLoad_Click(object sender, RoutedEventArgs e)
-        {
-            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
-            dlg.FileName = ""; // Default file name
-            dlg.Filter = "TMTXL results (*.tmtxl)|*.tmtxl"; // Filter files by extension
-            dlg.Title = "Load results";
-
-            // Show open file dialog box
-            Nullable<bool> result = dlg.ShowDialog();
-            if (result == true)
-            {
-                try
-                {
-                    if (MyResults == null)
-                        MyResults = new();
-
-                    MyResults = MyResults.DeserializeResults(dlg.FileName);
-                    this.Setup(MyResults);
-                    System.Windows.Forms.MessageBox.Show("The results have been load successfully!", "Information", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
-                }
-                catch (Exception exc)
-                {
-                    Console.WriteLine("ERROR: " + exc.Message);
-                    System.Windows.Forms.MessageBox.Show("Failed to load!", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
-                }
-            }
         }
 
         private void results_datagrid_LoadingRow(object sender, DataGridRowEventArgs e)
@@ -944,6 +976,82 @@ namespace TMTXL.Results
                     System.Windows.Forms.MessageBox.Show("Failed to save!", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                 }
             }
+        }
+
+        private void CommandBindingOpen_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
+        }
+
+        private void CommandBindingOpen_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.FileName = ""; // Default file name
+            dlg.Filter = "TMTXL results (*.tmtxl)|*.tmtxl"; // Filter files by extension
+            dlg.Title = "Load results";
+
+            // Show open file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+            if (result == true)
+            {
+                try
+                {
+                    if (MyResults == null)
+                        MyResults = new();
+
+                    MyResults = MyResults.DeserializeResults(dlg.FileName);
+                    this.Setup(MyResults);
+                    System.Windows.Forms.MessageBox.Show("The results have been load successfully!", "Information", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
+                }
+                catch (Exception exc)
+                {
+                    Console.WriteLine("ERROR: " + exc.Message);
+                    System.Windows.Forms.MessageBox.Show("Failed to load!", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+        private void CommandBindingSave_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
+        }
+
+        private void CommandBindingSave_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (MyResults == null || MyResults.CSMSearchResults == null || MyResults.CSMSearchResults.Count == 0)
+            {
+                System.Windows.Forms.MessageBox.Show("There is no data to be processed!", "Warning", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                return;
+            }
+
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = ""; // Default file name
+            dlg.Filter = "TMTXL results (*.tmtxl)|*.tmtxl"; // Filter files by extension
+            dlg.Title = "Save results";
+
+            // Show open file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+
+            if (result == true)
+            {
+                string FileName = dlg.FileName;
+
+                try
+                {
+                    MyResults.SerializeResults(FileName);
+                    System.Windows.Forms.MessageBox.Show("The results have been saved successfully!", "Information", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
+                }
+                catch (Exception exc)
+                {
+                    Console.WriteLine("ERROR: " + exc.Message);
+                    System.Windows.Forms.MessageBox.Show("Failed to save!", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            ppi_results_datagrid.MaxWidth = tabControl.ActualWidth / 2;
         }
     }
 

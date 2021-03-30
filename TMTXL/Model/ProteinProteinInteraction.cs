@@ -40,9 +40,9 @@ namespace TMTXL.Model
         [ProtoMember(10)]
         public int specCount;
         [ProtoMember(11)]
-        public double log2FoldChange;
+        public List<double> log2FoldChange;
         [ProtoMember(12)]
-        public double pValue;
+        public List<double> pValue;
         [ProtoMember(13)]
         public List<CSMSearchResult> cSMs;
 

@@ -140,6 +140,7 @@ namespace TMTXL.Control
             }
 
             resultsPackage = new ResultsPackage();
+            resultsPackage.Params = programParams;
 
             for (int i = 0; i < xlinkCSMFiles.Count; i++)
             {
@@ -215,16 +216,13 @@ namespace TMTXL.Control
         public IsobaricParams setIsobaricAnalyzerParams()
         {
             //Obtain class labels
-            string tmt10ClassLabels = "1 1 1 1 1 2 2 2 2 2";
-            List<int> classLabels = Regex.Split(tmt10ClassLabels, " ").Select(a => int.Parse(a)).ToList();
+            List<int> classLabels = Regex.Split(programParams.ClassLabels, " ").Select(a => int.Parse(a)).ToList();
             //Obtain the isobaric masses
-            string tmt10IsobaricMassess = "126.127726 127.124761 127.131081 128.128116 128.134436 129.131471 129.137790 130.134825 130.141145 131.138180";
-            List<double> isobaricMasses = Regex.Split(tmt10IsobaricMassess, " ").Select(a => double.Parse(a)).ToList();
 
             IsobaricParams ip = new IsobaricParams()
             {
                 ClassLabels = classLabels,
-                MarkerMZs = isobaricMasses,
+                MarkerMZs = programParams.IsobaricMassess,
                 AnalysisType = true,//It is not PLP file
                 RAWDirectory = programParams.RawFilesDir,
                 MarkerPPMTolerance = 20,
@@ -234,6 +232,7 @@ namespace TMTXL.Control
                 NormalizationPurityCorrection = true,
                 PatternLabProjectOnlyUniquePeptides = false,
                 YadaMultiplexCorrectionDir = string.Empty,
+                SPSMS3 = programParams.SPSMS3
             };
 
             return ip;

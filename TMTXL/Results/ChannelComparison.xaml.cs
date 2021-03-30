@@ -94,10 +94,10 @@ namespace TMTXL.Results
                     //row["130C"] = Utils.Utils.RoundUp(csm.quantitation[8]);
                     //row["131"] = Utils.Utils.RoundUp(csm.quantitation[9]);
                 }
-                row["Avg 1 not Null"] = Utils.Utils.RoundUp(csm.avg_notNull_1);
-                row["Avg 2 not Null"] = Utils.Utils.RoundUp(csm.avg_notNull_2);
-                row["Log2(Fold Change)"] = Math.Round(csm.log2FoldChange, 4);
-                row["p-value"] = Math.Round(csm.pValue, 4);
+                //row["Avg 1 not Null"] = Utils.Utils.RoundUp(csm.avg_notNull_1);
+                //row["Avg 2 not Null"] = Utils.Utils.RoundUp(csm.avg_notNull_2);
+                row["Log2(Fold Change)"] = Math.Round(csm.log2FoldChange[0], 4);
+                row["p-value"] = Math.Round(csm.pValue[0], 4);
                 dtCSM.Rows.Add(row);
             }
 

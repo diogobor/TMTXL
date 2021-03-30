@@ -65,13 +65,11 @@ namespace TMTXL.Model
         [ProtoMember(21)]
         public List<string> genes_beta { get; set; }
         [ProtoMember(22)]
-        public double avg_notNull_1 { get; set; }
+        public List<double> avg_notNull { get; set; }
         [ProtoMember(23)]
-        public double avg_notNull_2 { get; set; }
+        public List<double> log2FoldChange { get; set; }
         [ProtoMember(24)]
-        public double log2FoldChange { get; set; }
-        [ProtoMember(25)]
-        public double pValue { get; set; }
+        public List<double> pValue { get; set; }
 
         /// <summary>
         /// Constructor

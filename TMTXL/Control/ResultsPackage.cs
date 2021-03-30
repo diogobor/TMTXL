@@ -26,7 +26,8 @@ namespace TMTXL.Control
         public List<string> FileNameIndex;
         [ProtoMember(6)]
         public List<ProteinProteinInteraction> PPIResults;
-        
+        [ProtoMember(7)]
+        public ProgramParams Params;
 
         /// <summary>
         /// Empty constructor
@@ -41,7 +42,7 @@ namespace TMTXL.Control
             PPIResults = new List<ProteinProteinInteraction>();
         }
 
-        public ResultsPackage(List<CSMSearchResult> cSMSearchResults, List<XLSearchResult> xlSearchResults, List<XLSearchResult> residueSearchResults, List<MSUltraLight> spectra, List<string> fileNameIndex, List<ProteinProteinInteraction> pPIResults)
+        public ResultsPackage(List<CSMSearchResult> cSMSearchResults, List<XLSearchResult> xlSearchResults, List<XLSearchResult> residueSearchResults, List<MSUltraLight> spectra, List<string> fileNameIndex, List<ProteinProteinInteraction> pPIResults, ProgramParams _params)
         {
             this.CSMSearchResults = cSMSearchResults;
             this.XLSearchResults = xlSearchResults;
@@ -49,6 +50,7 @@ namespace TMTXL.Control
             this.Spectra = spectra;
             this.FileNameIndex = fileNameIndex;
             this.PPIResults = pPIResults;
+            this.Params = _params;
         }
 
         /// <summary>

@@ -15,8 +15,15 @@ namespace TMTXL.Control
         public string RawFilesDir { get;  set; }
         [ProtoMember(2)]
         public string IDdir { get;  set; }
-        [ProtoMember(3)]
         public List<List<double>> PurityCorrectionMatrix { get; set; }
+        [ProtoMember(3)]
+        public string ClassLabels { get; set; }
+        [ProtoMember(4)]
+        public List<double> IsobaricMassess { get; set; }
+        [ProtoMember(5)]
+        public bool SPSMS3 { get; set; }
+        [ProtoMember(6)]
+        public string ChemicalLabel { get; set; }
 
         /// <summary>
         /// Empty constructor
