@@ -566,6 +566,7 @@ namespace IsobaricAnalyzer
                                                                                select Tuple.Create(ion.Item1, ion.Item2)).ToList(),
 
                                                                  ScanNumber = ms.ScanNumber,
+                                                                 PrecursorScanNumber = ms.PrecursorScanNumber
                                                              }).ToList();
                 spectraFromAThermoFile.RemoveAll(a => a.Ions == null);
 
