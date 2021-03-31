@@ -154,11 +154,14 @@
                             </StackPanel>
 
                             <TextBlock>Control channel:</TextBlock>
-                            <ComboBox x:Name="control_channel_combobox" Width="100" HorizontalAlignment="Left" Margin="0,5,0,10">
-                                
+                            <ComboBox x:Name="control_channel_combobox" Width="100" HorizontalAlignment="Left" Margin="0,5,0,10"/>
+                            <TextBlock>Multinoch:</TextBlock>
+                            <ComboBox x:Name="multinoch_combobox" Width="100" HorizontalAlignment="Left" Margin="0,5,0,10">
+                                <ComboBoxItem IsSelected="True">None</ComboBoxItem>
+                                <ComboBoxItem>MS2-MS2</ComboBoxItem>
+                                <ComboBoxItem>SPS-MS3</ComboBoxItem>
                             </ComboBox>
                             <CheckBox x:Name="checkbox_normalization" IsChecked="True" Margin="0,0,0,10">Normalize spectra</CheckBox>
-                            <CheckBox x:Name="checkbox_sps_ms3" Margin="0,0,0,10">SPS-MS3</CheckBox>
                         </StackPanel>
                     </GroupBox>
                 </StackPanel>

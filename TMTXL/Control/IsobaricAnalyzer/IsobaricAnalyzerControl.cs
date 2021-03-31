@@ -70,7 +70,7 @@ namespace IsobaricAnalyzer
             this.removeMultiplexSpectra();
 
             #endregion
-            
+
             this.processRawFiles();
 
             #region initialize dictionary(ies) for the normalize reporter ions (channels) of all or identified spectra
@@ -416,7 +416,47 @@ namespace IsobaricAnalyzer
             Console.WriteLine("Done!");
         }
 
-        private void MultiNoch(FileInfo rawFile, List<MSUltraLight> ms2pectraFromAThermoFile)
+        private void MultinochMS2(List<MSUltraLight> ms2pectraFromAThermoFile)
+        {
+            List<int> ms2PrecursorChimeraSpectra = new();
+            int object_processed = 0;
+            int old_progress = 0;
+            double totalObjects = ms2pectraFromAThermoFile.Count;
+
+            //Parallel.ForEach(ms2pectraFromAThermoFile,
+            //      new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+            //      ms2Chimera =>
+
+            foreach (MSUltraLight ms2Chimera in ms2pectraFromAThermoFile)
+            {
+                if (ms2PrecursorChimeraSpectra.Contains(ms2Chimera.PrecursorScanNumber)) continue;
+                MSUltraLight ms2 = ms2pectraFromAThermoFile.Where(a => a.PrecursorScanNumber == ms2Chimera.PrecursorScanNumber && a.ScanNumber != ms2Chimera.ScanNumber).FirstOrDefault();
+                
+                if (ms2 != null)
+                {
+                    ms2PrecursorChimeraSpectra.Add(ms2.PrecursorScanNumber);
+
+                    ms2.Ions.AddRange(ms2Chimera.Ions);
+                    ms2.Ions = ms2.Ions.Distinct().ToList();
+                    ms2.Ions.Sort();
+                    object_processed++;
+                    int new_progress = (int)((double)object_processed / (totalObjects) * 100);
+                    if (new_progress > old_progress)
+                    {
+                        old_progress = new_progress;
+                        Console.Write("Processing MS2-MS2 spectra: " + old_progress + "%");
+                    }
+                }
+            }
+            //);
+        }
+
+        /// <summary>
+        /// Method responsible for merging ms3 and ms2 spectra
+        /// </summary>
+        /// <param name="rawFile"></param>
+        /// <param name="ms2pectraFromAThermoFile"></param>
+        private void MultinochSPSMS3(FileInfo rawFile, List<MSUltraLight> ms2pectraFromAThermoFile)
         {
             string current_fileNme = rawFile.Name.Substring(0, rawFile.Name.Length - rawFile.Extension.Length);
             int rawFileIndex = resultsPackage.FileNameIndex.IndexOf(current_fileNme);
@@ -454,6 +494,24 @@ namespace IsobaricAnalyzer
                       }
                   }
             );
+        }
+
+        /// <summary>
+        /// Method responsible for computing Multinoch (chimera) spectra
+        /// </summary>
+        /// <param name="rawFile"></param>
+        /// <param name="ms2pectraFromAThermoFile"></param>
+        private void MultiNoch(FileInfo rawFile, List<MSUltraLight> ms2pectraFromAThermoFile)
+        {
+            if (myParams.Multinoch == 1)//MS2-MS2
+            {
+                this.MultinochMS2(rawFile, ms2pectraFromAThermoFile);
+            }
+            else
+            {
+                this.MultinochSPSMS3(rawFile, ms2pectraFromAThermoFile);
+            }
+
         }
 
         /// <summary>
@@ -547,7 +605,7 @@ namespace IsobaricAnalyzer
                     #endregion
                 }
 
-                if (myParams.SPSMS3)
+                if (myParams.Multinoch > 0)//0: None; 1: MS2-MS2; 2: SPS-MS3
                 {
                     this.MultiNoch(rawFile, spectraFromAThermoFile);
                 }

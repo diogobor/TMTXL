@@ -21,7 +21,8 @@ namespace TMTXL.Control
         [ProtoMember(4)]
         public List<double> IsobaricMassess { get; set; }
         [ProtoMember(5)]
-        public bool SPSMS3 { get; set; }
+        ///0: None; 1: MS2-MS2; 2: SPS-MS3
+        public short Multinoch { get; set; }
         [ProtoMember(6)]
         public string ChemicalLabel { get; set; }
         [ProtoMember(7)]

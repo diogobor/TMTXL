@@ -23,6 +23,6 @@ namespace IsobaricAnalyzer
         /// </summary>
         public bool AnalysisType { get; set; }
         public bool PatternLabProjectOnlyUniquePeptides { get; set; }
-        public bool SPSMS3 { get; set; }
+        public short Multinoch { get; set; }
     }
 }

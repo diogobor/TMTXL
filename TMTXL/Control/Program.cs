@@ -232,7 +232,7 @@ namespace TMTXL.Control
                 NormalizationPurityCorrection = true,
                 PatternLabProjectOnlyUniquePeptides = false,
                 YadaMultiplexCorrectionDir = string.Empty,
-                SPSMS3 = programParams.SPSMS3
+                Multinoch = programParams.Multinoch
             };
 
             return ip;

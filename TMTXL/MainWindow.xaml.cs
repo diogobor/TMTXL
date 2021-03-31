@@ -271,7 +271,7 @@ namespace TMTXL
             {
             }
             myParams.NormalizeSpectra = (bool)checkbox_normalization.IsChecked;
-            myParams.SPSMS3 = (bool)checkbox_sps_ms3.IsChecked;
+            myParams.Multinoch = (short)multinoch_combobox.SelectedIndex;
             myParams.ChemicalLabel = ((ComboBoxItem)comboBoxPurityDefaults.SelectedValue).Content.ToString();
             return myParams;
         }
@@ -316,7 +316,8 @@ namespace TMTXL
                 return false;
             }
 
-            if (String.IsNullOrEmpty(class_label_textbox.Text)){
+            if (String.IsNullOrEmpty(class_label_textbox.Text))
+            {
                 Console.WriteLine("ERROR: No class label has been defined.");
                 System.Windows.MessageBox.Show(
                         "Please set the classes labels on 'Advanced Parameters' tab.",
