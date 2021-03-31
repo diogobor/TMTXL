@@ -228,7 +228,7 @@ namespace TMTXL.Control
                 MarkerPPMTolerance = 20,
                 IonThreshold = 0.025,
                 NormalizationIdentifiedSpectra = false,
-                NormalizationAllSpectra = true,
+                NormalizationAllSpectra = programParams.NormalizeSpectra,
                 NormalizationPurityCorrection = true,
                 PatternLabProjectOnlyUniquePeptides = false,
                 YadaMultiplexCorrectionDir = string.Empty,

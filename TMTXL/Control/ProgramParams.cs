@@ -26,6 +26,9 @@ namespace TMTXL.Control
         public string ChemicalLabel { get; set; }
         [ProtoMember(7)]
         public int ControlChannel { get; set; }
+        [ProtoMember(8)]
+        public bool NormalizeSpectra { get; set; }
+        
 
         /// <summary>
         /// Empty constructor

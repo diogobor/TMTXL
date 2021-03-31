@@ -70,13 +70,11 @@ namespace IsobaricAnalyzer
             this.removeMultiplexSpectra();
 
             #endregion
+            
+            this.processRawFiles();
 
             #region initialize dictionary(ies) for the normalize reporter ions (channels) of all or identified spectra
 
-            //if (myParams.NormalizationAllSpectra)
-            //{
-            this.setAllNormalizationDictionary();
-            //}
 
             if (myParams.NormalizationIdentifiedSpectra)
             {
@@ -451,9 +449,9 @@ namespace IsobaricAnalyzer
         }
 
         /// <summary>
-        /// Method responsible for setting the normalization dictionary with the channels (reporter ions) of all spectra
+        /// Method responsible for reading all spectra files and process all of them
         /// </summary>
-        private void setAllNormalizationDictionary()
+        private void processRawFiles()
         {
             //Get signal from all spectra
             signalAllNormalizationDictionary = new Dictionary<string, double[]>();

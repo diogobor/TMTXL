@@ -270,6 +270,7 @@ namespace TMTXL
             catch (Exception)
             {
             }
+            myParams.NormalizeSpectra = (bool)checkbox_normalization.IsChecked;
             myParams.SPSMS3 = (bool)checkbox_sps_ms3.IsChecked;
             myParams.ChemicalLabel = ((ComboBoxItem)comboBoxPurityDefaults.SelectedValue).Content.ToString();
             return myParams;
