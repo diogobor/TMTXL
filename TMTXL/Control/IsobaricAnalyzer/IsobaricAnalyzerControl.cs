@@ -395,10 +395,18 @@ namespace IsobaricAnalyzer
                     csm.pValue = new();
                     for (int i = 0; i < uniqueClasses.Count; i++)
                     {
-                        if (csm.avg_notNull.Count > i + 1 && csm.avg_notNull[i + 1] > 0)
+                        if (csm.avg_notNull.Count > i + 1)
                         {
-                            csm.log2FoldChange.Add(csm.avg_notNull[0] / csm.avg_notNull[i + 1]);
-                            csm.pValue.Add(double.IsNaN(csm.log2FoldChange[0]) ? double.NaN : IsobaricUtils.computeTtest(csm.quantitation));
+                            if (csm.avg_notNull[i + 1] > 0)
+                            {
+                                csm.log2FoldChange.Add(csm.avg_notNull[0] / csm.avg_notNull[i + 1]);
+                                csm.pValue.Add(double.IsNaN(csm.log2FoldChange[0]) ? double.NaN : IsobaricUtils.computeTtest(csm.quantitation));
+                            }
+                            else
+                            {
+                                csm.log2FoldChange.Add(0);
+                                csm.pValue.Add(0);
+                            }
                         }
                         else break;
                     }
