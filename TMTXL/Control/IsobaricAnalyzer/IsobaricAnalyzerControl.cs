@@ -505,7 +505,7 @@ namespace IsobaricAnalyzer
         {
             if (myParams.Multinoch == 1)//MS2-MS2
             {
-                this.MultinochMS2(rawFile, ms2pectraFromAThermoFile);
+                this.MultinochMS2(ms2pectraFromAThermoFile);
             }
             else
             {
