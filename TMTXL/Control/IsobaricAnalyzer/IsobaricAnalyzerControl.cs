@@ -130,7 +130,22 @@ namespace IsobaricAnalyzer
                         for (int i = 0; i < qtdFoldChange; i++)
                         {
                             var folds = xlDic.Select(a => a.log2FoldChange[i]).ToList();
-                            ppi.log2FoldChange.Add(folds.Count > 0 ? folds.Average() : 0);
+
+                            double median = 0;
+                            if (folds.Count > 0)
+                            {
+                                if (folds.Count == 1)
+                                    median = folds[0];
+                                else
+                                {
+                                    var orderedQuant = folds.OrderBy(p => p);
+                                    int count = orderedQuant.Count();
+                                    median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
+                                    median /= 2;
+                                }
+                            }
+
+                            ppi.log2FoldChange.Add(median);
                             ppi.pValue.Add(folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xlDic[0].pValue[i]);
                         }
                     }
@@ -218,7 +233,22 @@ namespace IsobaricAnalyzer
                     for (int i = 0; i < qtdFoldChange; i++)
                     {
                         var folds = xl.csms.Select(a => a.log2FoldChange[i]).ToList();
-                        residueSr.log2FoldChange.Add(folds.Count > 0 ? folds.Average() : 0);
+
+                        double median = 0;
+                        if (folds.Count > 0)
+                        {
+                            if (folds.Count == 1)
+                                median = folds[0];
+                            else
+                            {
+                                var orderedQuant = folds.OrderBy(p => p);
+                                int count = orderedQuant.Count();
+                                median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
+                                median /= 2;
+                            }
+                        }
+
+                        residueSr.log2FoldChange.Add(median);
                         residueSr.pValue.Add(folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xl.csms[0].pValue[i]);
                     }
                 }
@@ -302,25 +332,28 @@ namespace IsobaricAnalyzer
 
                 if (xl.csms.Count > 1)
                 {
-                    //double[] thisQuantitation = new double[myParams.MarkerMZs.Count];
-
-                    //for (int i = 0; i < myParams.MarkerMZs.Count; i++)
-                    //{
-                    //    var orderedQuant = xl.csms.Select(a => a.quantitation[i]).OrderBy(p => p);
-                    //    int count = orderedQuant.Count();
-                    //    double median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
-                    //    median /= 2;
-                    //    thisQuantitation[i] = median;
-                    //}
-                    //xlSr.quantitation = thisQuantitation.ToList();
-
                     int qtdFoldChange = xl.csms[0].log2FoldChange.Count;
                     xlSr.log2FoldChange = new();
                     xlSr.pValue = new();
                     for (int i = 0; i < qtdFoldChange; i++)
                     {
                         var folds = xl.csms.Select(a => a.log2FoldChange[i]).ToList();
-                        xlSr.log2FoldChange.Add(folds.Count > 0 ? folds.Average() : 0);
+
+                        double median = 0;
+                        if (folds.Count > 0)
+                        {
+                            if (folds.Count == 1) 
+                                median = folds[0];
+                            else
+                            {
+                                var orderedQuant = folds.OrderBy(p => p);
+                                int count = orderedQuant.Count();
+                                median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
+                                median /= 2;
+                            }
+                        }
+
+                        xlSr.log2FoldChange.Add(median);
                         xlSr.pValue.Add(folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xl.csms[0].pValue[i]);
                     }
                 }
