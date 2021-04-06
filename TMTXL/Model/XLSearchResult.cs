@@ -12,7 +12,7 @@ namespace TMTXL.Model
     /// </summary>
     [Serializable]
     [ProtoContract]
-    public class XLSearchResult : CSMSearchResult
+    public class XLSearchResult : CSMSearchResult, IEquatable<XLSearchResult>
     {
         [ProtoMember(1)]
         public List<CSMSearchResult> cSMs { get; set; }
@@ -25,6 +25,22 @@ namespace TMTXL.Model
         public XLSearchResult(List<CSMSearchResult> cSMs)
         {
             this.cSMs = cSMs;
+        }
+
+        /// <summary>
+        /// Method responsible for cloning object
+        /// </summary>
+        /// <returns></returns>
+        public XLSearchResult ShallowCopy()
+        {
+            return (XLSearchResult)this.MemberwiseClone();
+        }
+
+        public bool Equals(XLSearchResult other)
+        {
+            return this.cSMs != null && other.cSMs != null && this.cSMs.Count == other.cSMs.Count && this.cSMs.SequenceEqual(other.cSMs) &&
+                this.log2FoldChange != null && other.log2FoldChange != null && this.log2FoldChange.Count == other.log2FoldChange.Count && this.log2FoldChange.SequenceEqual(other.log2FoldChange) &&
+                this.pValue != null && other.pValue != null && this.pValue.Count == other.pValue.Count && this.pValue.SequenceEqual(other.pValue);
         }
     }
 }

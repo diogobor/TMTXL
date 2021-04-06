@@ -28,13 +28,20 @@ namespace TMTXL.Results
     /// </summary>
     public partial class ResultsWin : Window
     {
-        
+
+        private int SPEC_COUNT { get; set; } = 2;
+        private int MIN_CROSSLINKEDPEPTIDES { get; set; } = 2;
+        private double FOLD_CHANGE_CUTOFF { get; set; } = 1;
+        private double PVALUE_CUTOFF { get; set; } = 0.05;
+
+        private ResultsPackage OriginalResults;
         private ResultsPackage MyResults;
 
-        private List<XLSearchResult> filteredXLs;
-        private List<ProteinProteinInteraction> filteredPPIs;
-
         private PlotController _ChartController;
+
+        /// <summary>
+        /// Method responsible for displaying dot property when mouse hovers over the point
+        /// </summary>
         public PlotController ChartController
         {
             get
@@ -311,13 +318,15 @@ namespace TMTXL.Results
             for (int i = 1; i <= qtdUniqueClass - 1; i++)
                 dtPPI.Columns.Add("p-value" + i, typeof(double));
 
-            foreach (ProteinProteinInteraction ppi in MyResults.PPIResults.Where(a => a.specCount > 2).OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.specCount))
+            foreach (ProteinProteinInteraction ppi in MyResults.PPIResults.OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.specCount))
             {
                 if (ppi.pValue[0] == 0 && ppi.log2FoldChange[0] == 0) continue;
 
-                IEnumerable<XLSearchResult> filteredCSMs = MyResults.XLSearchResults.Where(a => a.cSMs.Count > 2 && a.cSMs.Any(b => b.genes_alpha.Contains(ppi.gene_a) && b.genes_beta.Contains(ppi.gene_b)));
+                IEnumerable<XLSearchResult> filteredCSMs = MyResults.XLSearchResults.Where(a => a.cSMs.Any(b => b.genes_alpha.Contains(ppi.gene_a) && b.genes_beta.Contains(ppi.gene_b)));
+                if (filteredCSMs.Count() < MIN_CROSSLINKEDPEPTIDES) continue;
+
                 int countFilteredCSMs = filteredCSMs.Sum(a => a.cSMs.Count);
-                if (countFilteredCSMs == 0) continue;
+                if (countFilteredCSMs < SPEC_COUNT) continue;
 
                 var row = dtPPI.NewRow();
                 row["Gene A"] = ppi.gene_a;
@@ -339,26 +348,97 @@ namespace TMTXL.Results
         }
 
         /// <summary>
-        /// Method responsible for setting up 'ResultsPackage' object and initialize data grid views
+        /// Method responsible for cloning MyResults object
         /// </summary>
-        /// <param name="myResults"></param>
-        public void Setup(ResultsPackage myResults)
+        private void cloneResults()
         {
-            MyResults = myResults;
-            filteredXLs = MyResults.XLSearchResults.Where(a => a.cSMs.Count > 2).ToList();
-            filteredPPIs = MyResults.PPIResults.Where(ppi => MyResults.XLSearchResults.Where(a => a.cSMs.Count > 2 && a.cSMs.Any(b => b.genes_alpha.Contains(ppi.gene_a) && b.genes_beta.Contains(ppi.gene_b))).Sum(a => a.cSMs.Count) > 0).ToList();
+            #region Cloning MyResults
+            MyResults = new();
+            OriginalResults.CSMSearchResults.ForEach((item) =>
+            {
+                CSMSearchResult csm = item.ShallowCopy();
+                MyResults.CSMSearchResults.Add(csm);
+            });
+
+            OriginalResults.XLSearchResults.ForEach((item) =>
+            {
+                XLSearchResult xlsr = item.ShallowCopy();
+                MyResults.XLSearchResults.Add(xlsr);
+            });
+
+            OriginalResults.ResidueSearchResults.ForEach((item) =>
+            {
+                XLSearchResult residue = item.ShallowCopy();
+                MyResults.ResidueSearchResults.Add(residue);
+            });
+
+            OriginalResults.PPIResults.ForEach((item) =>
+            {
+                ProteinProteinInteraction ppi = item.ShallowCopy();
+                MyResults.PPIResults.Add(ppi);
+            });
+
+            MyResults.FileNameIndex = OriginalResults.FileNameIndex;
+            MyResults.Params = OriginalResults.Params;
+            MyResults.Spectra = OriginalResults.Spectra;
+            #endregion
+        }
+
+        /// <summary>
+        /// Method responsible for filtering results based on parameters set in the interface
+        /// </summary>
+        private void applyFilter()
+        {
+            cloneResults();
+
+            #region log2 fold change & p-value
+            MyResults.CSMSearchResults = MyResults.CSMSearchResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) > FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b < PVALUE_CUTOFF)).ToList();
+
+            MyResults.XLSearchResults = MyResults.XLSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) > FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b < PVALUE_CUTOFF)).ToList();
+            MyResults.XLSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange.Any(c => c < FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > PVALUE_CUTOFF)); });
+            MyResults.XLSearchResults.RemoveAll(a => a.cSMs.Count == 0);
+
+            MyResults.ResidueSearchResults = MyResults.ResidueSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) > FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b < PVALUE_CUTOFF)).ToList();
+            MyResults.ResidueSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange != null && b.pValue != null && b.log2FoldChange.Any(c => Math.Abs(c) < FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > PVALUE_CUTOFF)); });
+            MyResults.ResidueSearchResults.RemoveAll(a => a.cSMs.Count == 0);
+
+            MyResults.PPIResults = MyResults.PPIResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) > FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b < PVALUE_CUTOFF)).ToList();
+            MyResults.PPIResults.ForEach(a =>
+            {
+                if (a.cSMs != null)
+                {
+                    a.cSMs.RemoveAll(b => b.log2FoldChange != null && b.pValue != null && b.log2FoldChange.Any(c => Math.Abs(c) < FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > PVALUE_CUTOFF));
+                }
+            });
+            MyResults.PPIResults.RemoveAll(a => a.cSMs == null || a.cSMs.Count == 0);
+            #endregion
 
             csm_results_datagrid.ItemsSource = createDataTableCSM().AsDataView();
             xl_results_datagrid.ItemsSource = createDataTableXL().AsDataView();
             residues_results_datagrid.ItemsSource = createDataTableResidue().AsDataView();
             ppi_results_datagrid.ItemsSource = createDataTablePPI().AsDataView();
-            ppi_results_datagrid.MaxWidth = tabControl.ActualWidth / 2;
 
             plotXLDistribution();
             plotPPIAllDistribution();
 
         }
 
+        /// <summary>
+        /// Method responsible for setting up 'ResultsPackage' object and initialize data grid views
+        /// </summary>
+        /// <param name="myResults"></param>
+        public void Setup(ResultsPackage myResults)
+        {
+            OriginalResults = myResults;
+
+            applyFilter();
+            ppi_results_datagrid.Width = 400;
+
+        }
+
+        /// <summary>
+        /// Method responsible for plotting xl volcano plot
+        /// </summary>
         private void plotXLDistribution()
         {
             var plotModel1 = new PlotModel() { LegendPosition = LegendPosition.LeftTop };
@@ -440,7 +520,7 @@ namespace TMTXL.Results
             };
 
             double maxPvalue = 0;
-            foreach (XLSearchResult xl in MyResults.XLSearchResults)
+            foreach (XLSearchResult xl in OriginalResults.XLSearchResults)
             {
                 //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
                 if (xl.pValue[0] == 0.5) { continue; }
@@ -451,18 +531,18 @@ namespace TMTXL.Results
                 if (avgLogFold < -3) { avgLogFold = -3; }
                 if (avgLogFold > 3) { avgLogFold = 3; }
 
-                if (filteredXLs.ToList().Contains(xl))
+                if (MyResults.XLSearchResults.Contains(xl))
                 {
                     if (avgLogFold > 0)
                     {
-                        if (pValue > 1.30102 && avgLogFold > 1) //p-value < 0.05 && fold change > 1
+                        if (pValue > (Math.Log(PVALUE_CUTOFF, 10) * (-1)) && avgLogFold > FOLD_CHANGE_CUTOFF) //p-value < 0.05 && fold change > 1
                             greenPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                         else
                             yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                     }
                     else
                     {
-                        if (pValue > 1.30102 && avgLogFold < -1) //p-value < 0.05 && fold change < -1
+                        if (pValue > (Math.Log(PVALUE_CUTOFF, 10) * (-1)) && avgLogFold < -FOLD_CHANGE_CUTOFF) //p-value < 0.05 && fold change < -1
                             redPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                         else
                             yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
@@ -478,12 +558,12 @@ namespace TMTXL.Results
 
             zeroLine.Points.Add(new OxyPlot.DataPoint(0, 0));
             zeroLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, 0));
-            pValueThresholdLine.Points.Add(new OxyPlot.DataPoint(1.30102, 3));
-            pValueThresholdLine.Points.Add(new OxyPlot.DataPoint(1.30102, -3));
-            foldChangeUpperThresholdLine.Points.Add(new OxyPlot.DataPoint(0, 1));
-            foldChangeUpperThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, 1));
-            foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(0, -1));
-            foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, -1));
+            pValueThresholdLine.Points.Add(new OxyPlot.DataPoint((Math.Log(PVALUE_CUTOFF, 10) * (-1)), 3));
+            pValueThresholdLine.Points.Add(new OxyPlot.DataPoint((Math.Log(PVALUE_CUTOFF, 10) * (-1)), -3));
+            foldChangeUpperThresholdLine.Points.Add(new OxyPlot.DataPoint(0, FOLD_CHANGE_CUTOFF));
+            foldChangeUpperThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, FOLD_CHANGE_CUTOFF));
+            foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(0, -FOLD_CHANGE_CUTOFF));
+            foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, -FOLD_CHANGE_CUTOFF));
 
             grayPoints.RemoveAll(a => a.X > maxPvalue);
             Greenseries.ItemsSource = greenPoints;
@@ -519,6 +599,9 @@ namespace TMTXL.Results
             //xl_plot.Model.Annotations.Add(pointAnnotationControl);
         }
 
+        /// <summary>
+        /// Method responsible for plotting PPI volcano plot
+        /// </summary>
         private void plotPPIAllDistribution()
         {
             var plotModel1 = new PlotModel() { LegendPosition = LegendPosition.LeftTop };
@@ -601,7 +684,7 @@ namespace TMTXL.Results
             };
 
             double maxPvalue = 0;
-            foreach (ProteinProteinInteraction ppi in MyResults.PPIResults)
+            foreach (ProteinProteinInteraction ppi in OriginalResults.PPIResults)
             {
                 //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
                 if (ppi.pValue == null || ppi.pValue[0] == 0.5) { continue; }
@@ -612,18 +695,18 @@ namespace TMTXL.Results
                 if (avgLogFold < -3) { avgLogFold = -3; }
                 if (avgLogFold > 3) { avgLogFold = 3; }
 
-                if (filteredPPIs.ToList().Contains(ppi))
+                if (MyResults.PPIResults.ToList().Contains(ppi))
                 {
                     if (avgLogFold > 0)
                     {
-                        if (pValue > 1.30102 && avgLogFold > 1) //p-value < 0.05 && fold change > 1
+                        if (pValue > (Math.Log(PVALUE_CUTOFF, 10) * (-1)) && avgLogFold > FOLD_CHANGE_CUTOFF) //p-value < 0.05 && fold change > 1
                             greenPoints.Add(new CustomDataPoint(pValue, avgLogFold, ppi.specCount, ppi.gene_a + "-" + ppi.gene_b, 3));
                         else
                             yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, ppi.specCount, ppi.gene_a + "-" + ppi.gene_b, 3));
                     }
                     else
                     {
-                        if (pValue > 1.30102 && avgLogFold < -1) //p-value < 0.05 && fold change < -1
+                        if (pValue > (Math.Log(PVALUE_CUTOFF, 10) * (-1)) && avgLogFold < -FOLD_CHANGE_CUTOFF) //p-value < 0.05 && fold change < -1
                             redPoints.Add(new CustomDataPoint(pValue, avgLogFold, ppi.specCount, ppi.gene_a + "-" + ppi.gene_b, 3));
                         else
                             yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, ppi.specCount, ppi.gene_a + "-" + ppi.gene_b, 3));
@@ -639,12 +722,12 @@ namespace TMTXL.Results
 
             zeroLine.Points.Add(new OxyPlot.DataPoint(0, 0));
             zeroLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, 0));
-            pValueThresholdLine.Points.Add(new OxyPlot.DataPoint(1.30102, 3));
-            pValueThresholdLine.Points.Add(new OxyPlot.DataPoint(1.30102, -3));
-            foldChangeUpperThresholdLine.Points.Add(new OxyPlot.DataPoint(0, 1));
-            foldChangeUpperThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, 1));
-            foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(0, -1));
-            foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, -1));
+            pValueThresholdLine.Points.Add(new OxyPlot.DataPoint((Math.Log(PVALUE_CUTOFF, 10) * (-1)), 3));
+            pValueThresholdLine.Points.Add(new OxyPlot.DataPoint((Math.Log(PVALUE_CUTOFF, 10) * (-1)), -3));
+            foldChangeUpperThresholdLine.Points.Add(new OxyPlot.DataPoint(0, FOLD_CHANGE_CUTOFF));
+            foldChangeUpperThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, FOLD_CHANGE_CUTOFF));
+            foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(0, -FOLD_CHANGE_CUTOFF));
+            foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, -FOLD_CHANGE_CUTOFF));
 
             //grayPoints.RemoveAll(a => a.X > maxPvalue);
             Greenseries.ItemsSource = greenPoints;
@@ -662,6 +745,11 @@ namespace TMTXL.Results
 
             ppiAll_plot.Model = plotModel1;
         }
+
+        /// <summary>
+        /// Method responsible for plotting PPI volcano plot in the PPI tab
+        /// </summary>
+        /// <param name="xlSearchResults"></param>
         private void plotPPIDistribution(List<XLSearchResult> xlSearchResults)
         {
             if (xlSearchResults == null) return;
@@ -757,7 +845,7 @@ namespace TMTXL.Results
                 if (avgLogFold < -3) { avgLogFold = -3; }
                 if (avgLogFold > 3) { avgLogFold = 3; }
 
-                if (filteredXLs.ToList().Contains(xl))
+                if (MyResults.XLSearchResults.ToList().Contains(xl))
                 {
                     if (avgLogFold > 0)
                     {
@@ -806,9 +894,16 @@ namespace TMTXL.Results
             plotModel1.Series.Add(foldChangeLowerThresholdLine);
 
             ppi_plot.Model = plotModel1;
-            ppi_plot.Width = tabControl.ActualWidth - gb_ppi_data.ActualWidth - 20;
-
+            ppi_results_datagrid.Width = tabControl.ActualWidth / 2 - 40;
+            ppi_plot.Width = tabControl.ActualWidth - ppi_results_datagrid.ActualWidth - 20;
         }
+
+        /// <summary>
+        /// Method responsible for getting datagrid selected value
+        /// </summary>
+        /// <param name="grid"></param>
+        /// <param name="columnIndex"></param>
+        /// <returns></returns>
         private string GetSelectedValue(DataGrid grid, int columnIndex = 0)
         {
             if (grid.SelectedCells.Count == 0) return string.Empty;
@@ -1038,7 +1133,7 @@ namespace TMTXL.Results
 
                 try
                 {
-                    MyResults.SerializeResults(FileName);
+                    OriginalResults.SerializeResults(FileName);
                     System.Windows.Forms.MessageBox.Show("The results have been saved successfully!", "Information", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
                 }
                 catch (Exception exc)
@@ -1051,7 +1146,18 @@ namespace TMTXL.Results
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            ppi_results_datagrid.MaxWidth = tabControl.ActualWidth / 2;
+            ppi_results_datagrid.Width = tabControl.ActualWidth / 2 - 40;
+            ppi_plot.Width = tabControl.ActualWidth / 2 - 20;
+        }
+
+        private void filter_btn_Click(object sender, RoutedEventArgs e)
+        {
+            SPEC_COUNT = (int)IntegerUpDownSpecCount.Value;
+            MIN_CROSSLINKEDPEPTIDES = (int)IntegerUpDownNoPeptides.Value;
+            FOLD_CHANGE_CUTOFF = (double)IntegerUpDownFoldChangeCutoff.Value;
+            PVALUE_CUTOFF = (double)IntegerUpDownPvalueCutoff.Value;
+
+            applyFilter();
         }
     }
 

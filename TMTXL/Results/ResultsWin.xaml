@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:oxy="http://oxyplot.org/wpf"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:TMTXL.Results"
         mc:Ignorable="d"
         SizeChanged="Window_SizeChanged"
@@ -13,6 +14,12 @@
         <CommandBinding Command="Save" CanExecute="CommandBindingSave_CanExecute" Executed="CommandBindingSave_Executed"/>
     </Window.CommandBindings>
     <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="180"/>
+            <RowDefinition Height="300*"/>
+        </Grid.RowDefinitions>
+
         <DockPanel>
             <Menu DockPanel.Dock="Top">
                 <MenuItem Header="_File">
@@ -28,7 +35,7 @@
                         </MenuItem.Icon>
                     </MenuItem>
                     <Separator />
-                    <MenuItem Header="_Exit" Click="MenuItemExit_Click">
+                    <MenuItem Header="_Close" Click="MenuItemExit_Click">
                         <MenuItem.Icon>
                             <Image Source="/exit.ico" />
                         </MenuItem.Icon>
@@ -38,7 +45,43 @@
             <TextBox AcceptsReturn="True" />
         </DockPanel>
 
-        <GroupBox Margin="10,20,10,10" Padding="20">
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="155"/>
+                <RowDefinition Height="150"/>
+                <RowDefinition Height="300*"/>
+            </Grid.RowDefinitions>
+
+            <GroupBox Margin="10,22,-264,136" Padding="0,0,0,0" Grid.RowSpan="2">
+                <GroupBox.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock FontWeight="Bold">Filter</TextBlock>
+                    </StackPanel>
+                </GroupBox.Header>
+            </GroupBox>
+            <Label Margin="15,40,0,0" Content="Spectra count:" />
+            <xctk:IntegerUpDown Margin="160,45,-81,90" x:Name="IntegerUpDownSpecCount" Minimum="1" Value="2" ToolTip="Set the minimum number of spectra for each identified cross-linked peptide"  />
+            <Label Margin="15,70,0,0" Content="# Cross-linked Peptides:" />
+            <xctk:IntegerUpDown Margin="160,75,-81,60" x:Name="IntegerUpDownNoPeptides" Minimum="1" Value="2" ToolTip="Set the minimum number of cross-linked peptides for each protein-protein interaction"  />
+            <Label Margin="15,100,0,0" Content="Log2(Fold change) cutoff:" />
+            <xctk:DoubleUpDown Margin="160,105,-81,30" x:Name="IntegerUpDownFoldChangeCutoff" Increment="0.05" Minimum="0.01" Value="1" ToolTip="Set the fold change cutoff."/>
+            <Label Margin="15,130,0,0" Content="p-value cutoff:" />
+            <xctk:DoubleUpDown Margin="160,135,-81,0" x:Name="IntegerUpDownPvalueCutoff" Increment="0.02" Minimum="0.01" Value="0.05" ToolTip="Set the p-value cutoff."/>
+            <Button x:Name="filter_btn" Click="filter_btn_Click" Margin="294,96,-230,40" Cursor="Hand">
+                <StackPanel Orientation="Horizontal" Width="72">
+                    <DockPanel>
+                        <Image x:Name="filter_btn_img" Source="/Results/iconFilter.png" Margin="0,0,0,0" HorizontalAlignment="Left" Width="39" />
+                    </DockPanel>
+                    <TextBlock x:Name="filter_btn_text"><Run Text="Filter"/></TextBlock>
+                </StackPanel>
+
+            </Button>
+        </Grid>
+
+        <GroupBox Grid.Row="1" Margin="10,20,10,10" Padding="0,10,0,5">
             <GroupBox.Header>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock FontWeight="Bold">Results</TextBlock>
@@ -56,13 +99,13 @@
                             <DataGrid x:Name="ppi_results_datagrid" MinWidth="400" AlternatingRowBackground="WhiteSmoke" LoadingRow="results_datagrid_LoadingRow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" IsReadOnly="True" SelectionChanged="ppi_results_datagrid_SelectionChanged"/>
                         </GroupBox>
 
-                        <GroupBox Margin="0,0,0,0" Padding="0">
+                        <GroupBox Margin="0,0,0,0">
                             <GroupBox.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock FontWeight="Bold">Volcano Plot</TextBlock>
                                 </StackPanel>
                             </GroupBox.Header>
-                            <oxy:PlotView x:Name="ppi_plot" Background="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Controller="{Binding ChartController}">
+                            <oxy:PlotView x:Name="ppi_plot" Background="White" MinWidth="420" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Controller="{Binding ChartController}">
                                 <oxy:PlotView.ContextMenu>
                                     <ContextMenu>
                                         <MenuItem Header="Save" Click="PPIPlotMenuItemSave_Click">
@@ -119,4 +162,5 @@
         </GroupBox>
 
     </Grid>
+
 </Window>

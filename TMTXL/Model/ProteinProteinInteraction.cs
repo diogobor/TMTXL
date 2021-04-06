@@ -67,5 +67,14 @@ namespace TMTXL.Model
             this.score = score;
             this.fdr = fdr;
         }
+
+        /// <summary>
+        /// Method responsible for cloning object
+        /// </summary>
+        /// <returns></returns>
+        public ProteinProteinInteraction ShallowCopy()
+        {
+            return (ProteinProteinInteraction)this.MemberwiseClone();
+        }
     }
 }

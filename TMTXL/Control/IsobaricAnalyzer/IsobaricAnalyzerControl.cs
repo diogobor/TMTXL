@@ -399,7 +399,7 @@ namespace IsobaricAnalyzer
                         {
                             if (csm.avg_notNull[i + 1] > 0)
                             {
-                                csm.log2FoldChange.Add(csm.avg_notNull[0] / csm.avg_notNull[i + 1]);
+                                csm.log2FoldChange.Add(Math.Log2(csm.avg_notNull[0] / csm.avg_notNull[i + 1]));
                                 csm.pValue.Add(double.IsNaN(csm.log2FoldChange[0]) ? double.NaN : IsobaricUtils.computeTtest(csm.quantitation));
                             }
                             else

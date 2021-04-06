@@ -16,6 +16,7 @@
     <None Remove="load.jpg" />
     <None Remove="RAW.png" />
     <None Remove="report.jpg" />
+    <None Remove="Results\iconFilter.png" />
     <None Remove="Results\Save-icon.png" />
   </ItemGroup>
 
@@ -72,6 +73,7 @@
     <Resource Include="goBtn.png" />
     <Resource Include="load.jpg" />
     <Resource Include="report.jpg" />
+    <Resource Include="Results\iconFilter.png" />
     <Resource Include="Results\Save-icon.png" />
   </ItemGroup>
 

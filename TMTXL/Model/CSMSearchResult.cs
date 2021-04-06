@@ -79,10 +79,10 @@ namespace TMTXL.Model
         /// <param name="scanNumber"></param>
         /// <param name="charge"></param>
         /// <param name="precursor_mass"></param>
-        /// <param name="peptide_alpha"></param>
-        /// <param name="peptide_beta"></param>
-        /// <param name="pos_alpha"></param>
-        /// <param name="pos_beta"></param>
+        /// <param name="alpha_peptide"></param>
+        /// <param name="beta_peptide"></param>
+        /// <param name="alpha_pos_xl"></param>
+        /// <param name="beta_pos_xl"></param>
         /// <param name="alpha_pept_xl_pos"></param>
         /// <param name="beta_pept_xl_pos"></param>
         /// <param name="proteins_alpha"></param>
@@ -93,17 +93,17 @@ namespace TMTXL.Model
         /// <param name="peptide_beta_score"></param>
         /// <param name="genes_alpha"></param>
         /// <param name="genes_beta"></param>
-        public CSMSearchResult(string index, short fileIndex, int scanNumber, int charge, double precursor_mass, string peptide_alpha, string peptide_beta, short pos_alpha, short pos_beta, short alpha_pept_xl_pos, short beta_pept_xl_pos, List<string> proteins_alpha, List<string> proteins_beta, double peptide_alpha_mass, double peptide_beta_mass, double peptide_alpha_score, double peptide_beta_score, List<string> genes_alpha, List<string> genes_beta)
+        public CSMSearchResult(string index, short fileIndex, int scanNumber, int charge, double precursor_mass, string alpha_peptide, string beta_peptide, short alpha_pos_xl, short beta_pos_xl, short alpha_pept_xl_pos, short beta_pept_xl_pos, List<string> proteins_alpha, List<string> proteins_beta, double peptide_alpha_mass, double peptide_beta_mass, double peptide_alpha_score, double peptide_beta_score, List<string> genes_alpha, List<string> genes_beta)
         {
             _index = index;
             this.fileIndex = fileIndex;
             this.scanNumber = scanNumber;
             this.charge = charge;
             this.precursor_mass = precursor_mass;
-            this.alpha_peptide = peptide_alpha;
-            this.beta_peptide = peptide_beta;
-            this.alpha_pos_xl = pos_alpha;
-            this.beta_pos_xl = pos_beta;
+            this.alpha_peptide = alpha_peptide;
+            this.beta_peptide = beta_peptide;
+            this.alpha_pos_xl = alpha_pos_xl;
+            this.beta_pos_xl = beta_pos_xl;
             this.alpha_pept_xl_pos = alpha_pept_xl_pos;
             this.beta_pept_xl_pos = beta_pept_xl_pos;
             this.proteins_alpha = proteins_alpha;
@@ -114,6 +114,15 @@ namespace TMTXL.Model
             this.peptide_beta_score = peptide_beta_score;
             this.genes_alpha = genes_alpha;
             this.genes_beta = genes_beta;
+        }
+
+        /// <summary>
+        /// Method responsible for cloning object
+        /// </summary>
+        /// <returns></returns>
+        public CSMSearchResult ShallowCopy()
+        {
+            return (CSMSearchResult)this.MemberwiseClone();
         }
     }
 }
