@@ -395,12 +395,12 @@ namespace TMTXL.Results
             MyResults.CSMSearchResults = MyResults.CSMSearchResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) > FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b < PVALUE_CUTOFF)).ToList();
 
             MyResults.XLSearchResults = MyResults.XLSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) > FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b < PVALUE_CUTOFF)).ToList();
-            MyResults.XLSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange.Any(c => c < FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > PVALUE_CUTOFF)); });
-            MyResults.XLSearchResults.RemoveAll(a => a.cSMs.Count == 0);
+            MyResults.XLSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange.Any(c => Math.Abs(c) < FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > PVALUE_CUTOFF)); });
+            MyResults.XLSearchResults.RemoveAll(a => a.cSMs.Count < SPEC_COUNT);
 
             MyResults.ResidueSearchResults = MyResults.ResidueSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) > FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b < PVALUE_CUTOFF)).ToList();
             MyResults.ResidueSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange != null && b.pValue != null && b.log2FoldChange.Any(c => Math.Abs(c) < FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > PVALUE_CUTOFF)); });
-            MyResults.ResidueSearchResults.RemoveAll(a => a.cSMs.Count == 0);
+            MyResults.ResidueSearchResults.RemoveAll(a => a.cSMs.Count < SPEC_COUNT);
 
             MyResults.PPIResults = MyResults.PPIResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) > FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b < PVALUE_CUTOFF)).ToList();
             MyResults.PPIResults.ForEach(a =>
@@ -410,7 +410,7 @@ namespace TMTXL.Results
                     a.cSMs.RemoveAll(b => b.log2FoldChange != null && b.pValue != null && b.log2FoldChange.Any(c => Math.Abs(c) < FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > PVALUE_CUTOFF));
                 }
             });
-            MyResults.PPIResults.RemoveAll(a => a.cSMs == null || a.cSMs.Count == 0);
+            MyResults.PPIResults.RemoveAll(a => a.cSMs == null || a.cSMs.Count < SPEC_COUNT);
             #endregion
 
             csm_results_datagrid.ItemsSource = createDataTableCSM().AsDataView();
@@ -523,7 +523,7 @@ namespace TMTXL.Results
             foreach (XLSearchResult xl in OriginalResults.XLSearchResults)
             {
                 //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
-                if (xl.pValue[0] == 0.5) { continue; }
+                if (xl.cSMs == null || xl.cSMs.Count == 0 || xl.pValue[0] == 0.5) { continue; }
 
                 double avgLogFold = xl.log2FoldChange[0];
                 double pValue = Math.Log(xl.pValue[0], 10) * (-1);
@@ -552,7 +552,7 @@ namespace TMTXL.Results
                 }
                 else
                 {
-                    //grayPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 1));
+                    grayPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 1));
                 }
             }
 
@@ -695,7 +695,7 @@ namespace TMTXL.Results
                 if (avgLogFold < -3) { avgLogFold = -3; }
                 if (avgLogFold > 3) { avgLogFold = 3; }
 
-                if (MyResults.PPIResults.ToList().Contains(ppi))
+                if (MyResults.PPIResults.Contains(ppi))
                 {
                     if (avgLogFold > 0)
                     {

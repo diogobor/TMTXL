@@ -12,7 +12,7 @@ namespace TMTXL.Model
     /// </summary>
     [Serializable]
     [ProtoContract]
-    public class ProteinProteinInteraction
+    public class ProteinProteinInteraction : IEquatable<ProteinProteinInteraction>
     {
         /// <summary>
         /// Empty constructor
@@ -75,6 +75,17 @@ namespace TMTXL.Model
         public ProteinProteinInteraction ShallowCopy()
         {
             return (ProteinProteinInteraction)this.MemberwiseClone();
+        }
+
+        public bool Equals(ProteinProteinInteraction other)
+        {
+            return this.gene_a.Equals(other.gene_a) &&
+                this.gene_b.Equals(other.gene_b) &&
+                this.protein_a.Equals(other.protein_a) &&
+                this.protein_b.Equals(other.protein_b) &&
+                this.cSMs != null && other.cSMs != null && this.cSMs.Count == other.cSMs.Count && this.cSMs.SequenceEqual(other.cSMs) &&
+                this.log2FoldChange != null && other.log2FoldChange != null && this.log2FoldChange.Count == other.log2FoldChange.Count && this.log2FoldChange.SequenceEqual(other.log2FoldChange) &&
+                this.pValue != null && other.pValue != null && this.pValue.Count == other.pValue.Count && this.pValue.SequenceEqual(other.pValue);
         }
     }
 }
