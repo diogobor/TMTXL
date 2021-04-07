@@ -44,7 +44,7 @@ namespace TMTXL.Model
         [ProtoMember(12)]
         public List<double> pValue;
         [ProtoMember(13)]
-        public List<CSMSearchResult> cSMs;
+        public List<XLSearchResult> XLs;
 
         /// <summary>
         /// Constructor
@@ -83,7 +83,7 @@ namespace TMTXL.Model
                 this.gene_b.Equals(other.gene_b) &&
                 this.protein_a.Equals(other.protein_a) &&
                 this.protein_b.Equals(other.protein_b) &&
-                this.cSMs != null && other.cSMs != null && this.cSMs.Count == other.cSMs.Count && this.cSMs.SequenceEqual(other.cSMs) &&
+                this.XLs != null && other.XLs != null && this.XLs.Count == other.XLs.Count && this.XLs.SequenceEqual(other.XLs) &&
                 this.log2FoldChange != null && other.log2FoldChange != null && this.log2FoldChange.Count == other.log2FoldChange.Count && this.log2FoldChange.SequenceEqual(other.log2FoldChange) &&
                 this.pValue != null && other.pValue != null && this.pValue.Count == other.pValue.Count && this.pValue.SequenceEqual(other.pValue);
         }

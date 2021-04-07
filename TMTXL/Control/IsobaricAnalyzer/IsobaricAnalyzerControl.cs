@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using TMTXL.Control;
 using TMTXL.Model;
+using TMTXL.Utils;
 
 namespace IsobaricAnalyzer
 {
@@ -112,13 +113,16 @@ namespace IsobaricAnalyzer
 
             foreach (ProteinProteinInteraction ppi in resultsPackage.PPIResults)
             {
-                List<CSMSearchResult> xlDic = resultsPackage.CSMSearchResults.Where(a => a.genes_alpha.Contains(ppi.gene_a) && a.genes_beta.Contains(ppi.gene_b)).ToList();
-                xlDic.RemoveAll(a => a.log2FoldChange.Any(b => double.IsNaN(b)));
+                List<XLSearchResult> filteredXLs = resultsPackage.XLSearchResults.Where(a => a.cSMs.Any(b => b.genes_alpha.Contains(ppi.gene_a) && b.genes_beta.Contains(ppi.gene_b))).ToList();
 
-                if (xlDic.Count > 0)
+                if (filteredXLs.Count > 0)
                 {
-                    ppi.cSMs = xlDic;
-                    ppi.specCount = xlDic.Count;
+                    ppi.XLs = filteredXLs;
+                    ppi.specCount = filteredXLs.Count;
+
+                    List<CSMSearchResult> xlDic = new();
+                    filteredXLs.ForEach(a => { xlDic.AddRange(a.cSMs); });
+
                     ppi.log2FoldChange = xlDic[0].log2FoldChange;
                     ppi.pValue = xlDic[0].pValue;
 
@@ -342,7 +346,7 @@ namespace IsobaricAnalyzer
                         double median = 0;
                         if (folds.Count > 0)
                         {
-                            if (folds.Count == 1) 
+                            if (folds.Count == 1)
                                 median = folds[0];
                             else
                             {

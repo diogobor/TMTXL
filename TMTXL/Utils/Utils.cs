@@ -8,6 +8,12 @@ namespace TMTXL.Utils
 {
     public static class Utils
     {
+
+        public static int SPEC_COUNT { get; set; } = 2;
+        public static int MIN_CROSSLINKEDPEPTIDES { get; set; } = 2;
+        public static double FOLD_CHANGE_CUTOFF { get; set; } = 1;
+        public static double PVALUE_CUTOFF { get; set; } = 0.05;
+
         /// <summary>
         /// Method responsible for truncating large numbers
         /// </summary>
