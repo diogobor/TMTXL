@@ -386,7 +386,7 @@ namespace TMTXL.Results
             cloneResults();
 
             #region log2 fold change & p-value
-            MyResults.CSMSearchResults = MyResults.CSMSearchResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) > Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b < Utils.Utils.PVALUE_CUTOFF)).ToList();
+            MyResults.CSMSearchResults = MyResults.CSMSearchResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
 
             MyResults.XLSearchResults = MyResults.XLSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
             MyResults.XLSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange.Any(c => Math.Abs(c) < Utils.Utils.FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > Utils.Utils.PVALUE_CUTOFF)); });
