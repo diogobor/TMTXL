@@ -62,6 +62,7 @@ namespace TMTXL
                     results_btn.IsEnabled = true;
                     dataGridPurityCorrections.IsEnabled = true;
                     comboBoxPurityDefaults.IsEnabled = true;
+                    TabItemAdvancedParams.IsEnabled = true;
                     #endregion
 
                     run_btn_text.Text = "Run";
@@ -146,6 +147,7 @@ namespace TMTXL
                 results_btn.IsEnabled = false;
                 dataGridPurityCorrections.IsEnabled = false;
                 comboBoxPurityDefaults.IsEnabled = false;
+                TabItemAdvancedParams.IsEnabled = false;
                 #endregion
 
                 run_btn_text.Text = "Stop";
@@ -165,6 +167,7 @@ namespace TMTXL
                     results_btn.IsEnabled = true;
                     dataGridPurityCorrections.IsEnabled = true;
                     comboBoxPurityDefaults.IsEnabled = true;
+                    TabItemAdvancedParams.IsEnabled = true;
                     #endregion
 
                     run_btn_text.Text = "Run";

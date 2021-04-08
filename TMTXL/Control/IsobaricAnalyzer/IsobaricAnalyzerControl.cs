@@ -142,10 +142,7 @@ namespace IsobaricAnalyzer
                                     median = folds[0];
                                 else
                                 {
-                                    var orderedQuant = folds.OrderBy(p => p);
-                                    int count = orderedQuant.Count();
-                                    median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
-                                    median /= 2;
+                                    median = Utils.Median(folds);
                                 }
                             }
 
@@ -245,10 +242,7 @@ namespace IsobaricAnalyzer
                                 median = folds[0];
                             else
                             {
-                                var orderedQuant = folds.OrderBy(p => p);
-                                int count = orderedQuant.Count();
-                                median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
-                                median /= 2;
+                                median = Utils.Median(folds);
                             }
                         }
 
@@ -350,10 +344,7 @@ namespace IsobaricAnalyzer
                                 median = folds[0];
                             else
                             {
-                                var orderedQuant = folds.OrderBy(p => p);
-                                int count = orderedQuant.Count();
-                                median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
-                                median /= 2;
+                                median = Utils.Median(folds);
                             }
                         }
 

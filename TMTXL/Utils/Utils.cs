@@ -26,5 +26,21 @@ namespace TMTXL.Utils
             return Math.Ceiling(input * multiplier) / multiplier;
         }
 
+        /// <summary>
+        /// Method responsible for computing the median
+        /// </summary>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public static double Median(List<double> values)
+        {
+            double median = 0;
+            var orderedQuant = values.OrderBy(p => p);
+            int count = orderedQuant.Count();
+            median = orderedQuant.ElementAt(count / 2) + orderedQuant.ElementAt((count - 1) / 2);
+            median /= 2;
+            
+            return median;
+        }
+
     }
 }
