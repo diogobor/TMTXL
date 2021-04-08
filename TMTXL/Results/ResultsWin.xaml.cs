@@ -388,15 +388,15 @@ namespace TMTXL.Results
             #region log2 fold change & p-value
             MyResults.CSMSearchResults = MyResults.CSMSearchResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) > Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b < Utils.Utils.PVALUE_CUTOFF)).ToList();
 
-            MyResults.XLSearchResults = MyResults.XLSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) > Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b < Utils.Utils.PVALUE_CUTOFF)).ToList();
+            MyResults.XLSearchResults = MyResults.XLSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
             MyResults.XLSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange.Any(c => Math.Abs(c) < Utils.Utils.FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > Utils.Utils.PVALUE_CUTOFF)); });
             MyResults.XLSearchResults.RemoveAll(a => a.cSMs.Count < Utils.Utils.SPEC_COUNT);
 
-            MyResults.ResidueSearchResults = MyResults.ResidueSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) > Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b < Utils.Utils.PVALUE_CUTOFF)).ToList();
+            MyResults.ResidueSearchResults = MyResults.ResidueSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
             MyResults.ResidueSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange != null && b.pValue != null && b.log2FoldChange.Any(c => Math.Abs(c) < Utils.Utils.FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > Utils.Utils.PVALUE_CUTOFF)); });
             MyResults.ResidueSearchResults.RemoveAll(a => a.cSMs.Count < Utils.Utils.SPEC_COUNT);
 
-            MyResults.PPIResults = MyResults.PPIResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) > Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b < Utils.Utils.PVALUE_CUTOFF)).ToList();
+            MyResults.PPIResults = MyResults.PPIResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
             MyResults.PPIResults.ForEach(a =>
             {
                 if (a.XLs != null)
@@ -413,6 +413,8 @@ namespace TMTXL.Results
             ppi_results_datagrid.ItemsSource = createDataTablePPI().AsDataView();
 
             int qtdFoldChange = MyResults.PPIResults.Count > 0 ? MyResults.PPIResults[0].log2FoldChange.Count : 0;
+
+            int offsetX = 560;
 
             for (int i = 0; i < qtdFoldChange; i++)
             {
@@ -440,15 +442,16 @@ namespace TMTXL.Results
                 Label medianFoldChange_title = new();
                 medianFoldChange_title.Name = "foldchange_title_" + (i + 1);
                 medianFoldChange_title.Content = "Median fold changes-" + (i + 1) + ":";
-                medianFoldChange_title.Margin = new Thickness(560, 40, 0, 0);
+                medianFoldChange_title.Margin = new Thickness(offsetX, 40, 0, 0);
                 information_grid.Children.Add(medianFoldChange_title);
 
                 Label medianFoldChange = new();
                 medianFoldChange.Name = "foldchange_value_" + (i + 1);
                 medianFoldChange.Content = Math.Round(median, 4);
-                medianFoldChange.Margin = new Thickness(695, 40, 0, 0);
+                medianFoldChange.Margin = new Thickness(offsetX+135, 40, 0, 0);
                 medianFoldChange.FontWeight = System.Windows.FontWeights.Bold;
                 information_grid.Children.Add(medianFoldChange);
+                offsetX += 200;
             }
 
             plotXLDistribution();
