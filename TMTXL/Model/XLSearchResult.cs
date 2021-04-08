@@ -16,7 +16,7 @@ namespace TMTXL.Model
     {
         [ProtoMember(1)]
         public List<CSMSearchResult> cSMs { get; set; }
-        
+
         /// <summary>
         /// Empty constructor
         /// </summary>
@@ -33,7 +33,14 @@ namespace TMTXL.Model
         /// <returns></returns>
         public XLSearchResult ShallowCopy()
         {
-            return (XLSearchResult)this.MemberwiseClone();
+            XLSearchResult xlsr = (XLSearchResult)this.MemberwiseClone();
+            xlsr.cSMs = new List<CSMSearchResult>();
+            this.cSMs.ForEach(a =>
+            {
+                CSMSearchResult csm = a.ShallowCopy();
+                xlsr.cSMs.Add(csm);
+            });
+            return xlsr;
         }
 
         public bool Equals(XLSearchResult other)
