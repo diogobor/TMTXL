@@ -35,17 +35,20 @@ namespace TMTXL.Model
         {
             XLSearchResult xlsr = (XLSearchResult)this.MemberwiseClone();
             xlsr.cSMs = new List<CSMSearchResult>();
-            this.cSMs.ForEach(a =>
+            if (this.cSMs != null)
             {
-                CSMSearchResult csm = a.ShallowCopy();
-                xlsr.cSMs.Add(csm);
-            });
+                this.cSMs.ForEach(a =>
+                {
+                    CSMSearchResult csm = a.ShallowCopy();
+                    xlsr.cSMs.Add(csm);
+                });
+            }
             return xlsr;
         }
 
         public bool Equals(XLSearchResult other)
         {
-            return this.cSMs != null && other.cSMs != null && this.cSMs.Count == other.cSMs.Count && this.cSMs.SequenceEqual(other.cSMs) &&
+            return
                 this.log2FoldChange != null && other.log2FoldChange != null && this.log2FoldChange.Count == other.log2FoldChange.Count && this.log2FoldChange.SequenceEqual(other.log2FoldChange) &&
                 this.pValue != null && other.pValue != null && this.pValue.Count == other.pValue.Count && this.pValue.SequenceEqual(other.pValue);
         }

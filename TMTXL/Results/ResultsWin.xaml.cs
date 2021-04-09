@@ -128,7 +128,7 @@ namespace TMTXL.Results
             for (int i = 1; i <= qtdUniqueClass; i++)
                 dtCSM.Columns.Add("Avg " + i + " not Null", typeof(double));
             for (int i = 1; i <= qtdUniqueClass - 1; i++)
-                dtCSM.Columns.Add("Log2(Fold Change)" + i, typeof(double));
+                dtCSM.Columns.Add("Fold Change" + i, typeof(double));
             for (int i = 1; i <= qtdUniqueClass - 1; i++)
                 dtCSM.Columns.Add("p-value" + i, typeof(double));
 
@@ -199,7 +199,7 @@ namespace TMTXL.Results
 
                 for (int i = 1; i <= qtdUniqueClass - 1; i++)
                 {
-                    row["Log2(Fold Change)" + i] = Math.Round(csm.log2FoldChange[i - 1], 4);
+                    row["Fold Change" + i] = Math.Round(Math.Pow(2, csm.log2FoldChange[i - 1]), 4);
                     row["p-value" + i] = Math.Round(csm.pValue[i - 1], 4);
                 }
                 dtCSM.Rows.Add(row);
@@ -226,7 +226,7 @@ namespace TMTXL.Results
             dtXL.Columns.Add("Spec count", typeof(int));
             int qtdUniqueClass = Regex.Split(MyResults.Params.ClassLabels, " ").Distinct().Count();
             for (int i = 1; i <= qtdUniqueClass - 1; i++)
-                dtXL.Columns.Add("Log2(Fold Change)" + i, typeof(double));
+                dtXL.Columns.Add("Fold Change" + i, typeof(double));
             for (int i = 1; i <= qtdUniqueClass - 1; i++)
                 dtXL.Columns.Add("p-value" + i, typeof(double));
 
@@ -243,7 +243,7 @@ namespace TMTXL.Results
 
                 for (int i = 1; i <= qtdUniqueClass - 1; i++)
                 {
-                    row["Log2(Fold Change)" + i] = Math.Round(xl.log2FoldChange[i - 1], 4);
+                    row["Fold Change" + i] = Math.Round(Math.Pow(2, xl.log2FoldChange[i - 1]), 4);
                     row["p-value" + i] = Math.Round(xl.pValue[i - 1], 4);
                 }
                 dtXL.Rows.Add(row);
@@ -268,7 +268,7 @@ namespace TMTXL.Results
             dtResidues.Columns.Add("Spec count", typeof(int));
             int qtdUniqueClass = Regex.Split(MyResults.Params.ClassLabels, " ").Distinct().Count();
             for (int i = 1; i <= qtdUniqueClass - 1; i++)
-                dtResidues.Columns.Add("Log2(Fold Change)" + i, typeof(double));
+                dtResidues.Columns.Add("Fold Change" + i, typeof(double));
             for (int i = 1; i <= qtdUniqueClass - 1; i++)
                 dtResidues.Columns.Add("p-value" + i, typeof(double));
 
@@ -282,7 +282,7 @@ namespace TMTXL.Results
                 row["Spec count"] = xl.cSMs.Count;
                 for (int i = 1; i <= qtdUniqueClass - 1; i++)
                 {
-                    row["Log2(Fold Change)" + i] = Math.Round(xl.log2FoldChange[i - 1], 4);
+                    row["Fold Change" + i] = Math.Round(Math.Pow(2, xl.log2FoldChange[i - 1]), 4);
                     row["p-value" + i] = Math.Round(xl.pValue[i - 1], 4);
                 }
 
@@ -309,7 +309,7 @@ namespace TMTXL.Results
             dtPPI.Columns.Add("Spec count", typeof(int));
             int qtdUniqueClass = Regex.Split(MyResults.Params.ClassLabels, " ").Distinct().Count();
             for (int i = 1; i <= qtdUniqueClass - 1; i++)
-                dtPPI.Columns.Add("Log2(Fold Change)" + i, typeof(double));
+                dtPPI.Columns.Add("Fold Change" + i, typeof(double));
             for (int i = 1; i <= qtdUniqueClass - 1; i++)
                 dtPPI.Columns.Add("p-value" + i, typeof(double));
 
@@ -317,10 +317,7 @@ namespace TMTXL.Results
             {
                 if (ppi.pValue[0] == 0 && ppi.log2FoldChange[0] == 0) continue;
 
-                if (ppi.XLs.Count < Utils.Utils.MIN_CROSSLINKEDPEPTIDES) continue;
-
-                int countFilteredCSMs = ppi.XLs.Sum(a => a.cSMs.Count);
-                if (countFilteredCSMs < Utils.Utils.SPEC_COUNT) continue;
+                if (ppi.XLs.Count < Utils.Utils.MIN_CROSSLINKEDPEPTIDES || ppi.specCount < Utils.Utils.SPEC_COUNT) continue;
 
                 var row = dtPPI.NewRow();
                 row["Gene A"] = ppi.gene_a;
@@ -328,11 +325,11 @@ namespace TMTXL.Results
                 row["Protein A"] = ppi.protein_a;
                 row["Protein B"] = ppi.protein_b;
                 row["PPI score"] = Utils.Utils.RoundUp(ppi.score, 30);
-                row["Spec count"] = countFilteredCSMs;
+                row["Spec count"] = ppi.specCount;
                 row["XL count"] = ppi.XLs.Count;
                 for (int i = 1; i <= qtdUniqueClass - 1; i++)
                 {
-                    row["Log2(Fold Change)" + i] = Math.Round(ppi.log2FoldChange[i - 1], 4);
+                    row["Fold Change" + i] = Math.Round(Math.Pow(2, ppi.log2FoldChange[i - 1]), 4);
                     row["p-value" + i] = Math.Round(ppi.pValue[i - 1], 4);
                 }
                 dtPPI.Rows.Add(row);
@@ -346,6 +343,8 @@ namespace TMTXL.Results
         /// </summary>
         private void cloneResults()
         {
+            if (OriginalResults == null) return;
+
             #region Cloning MyResults
             MyResults = new();
             OriginalResults.CSMSearchResults.ForEach((item) =>
@@ -386,6 +385,8 @@ namespace TMTXL.Results
             cloneResults();
 
             #region log2 fold change & p-value
+            if (MyResults == null) return;
+
             MyResults.CSMSearchResults = MyResults.CSMSearchResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
 
             MyResults.XLSearchResults = MyResults.XLSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
@@ -399,12 +400,14 @@ namespace TMTXL.Results
             MyResults.PPIResults = MyResults.PPIResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
             MyResults.PPIResults.ForEach(a =>
             {
+                a.specCount = 0;
                 if (a.XLs != null)
                 {
                     a.XLs.RemoveAll(b => b.log2FoldChange != null && b.pValue != null && b.log2FoldChange.Any(c => Math.Abs(c) < Utils.Utils.FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > Utils.Utils.PVALUE_CUTOFF));
+                    a.specCount = a.XLs.Where(b => b.cSMs != null).Sum(b => b.cSMs.Count);
                 }
             });
-            MyResults.PPIResults.RemoveAll(a => a.XLs == null || a.XLs.Count < Utils.Utils.MIN_CROSSLINKEDPEPTIDES || (a.XLs.Any(b => b.cSMs.Count < Utils.Utils.SPEC_COUNT)));
+            MyResults.PPIResults.RemoveAll(a => a.XLs == null || a.XLs.Count < Utils.Utils.MIN_CROSSLINKEDPEPTIDES || a.specCount < Utils.Utils.SPEC_COUNT);
             #endregion
 
             csm_results_datagrid.ItemsSource = createDataTableCSM().AsDataView();
@@ -412,8 +415,22 @@ namespace TMTXL.Results
             residues_results_datagrid.ItemsSource = createDataTableResidue().AsDataView();
             ppi_results_datagrid.ItemsSource = createDataTablePPI().AsDataView();
 
-            int qtdFoldChange = MyResults.PPIResults.Count > 0 ? MyResults.PPIResults[0].log2FoldChange.Count : 0;
+            var foldChangeLables = information_grid.Children.OfType<Label>().Where(e =>
+            e.Name.Contains("foldchangePPI_title_") ||
+            e.Name.Contains("foldchangePPI_value_") ||
+            e.Name.Contains("foldchangeResidue_title_") ||
+            e.Name.Contains("foldchangeResidue_value_") ||
+            e.Name.Contains("foldchangeXL_title_") ||
+            e.Name.Contains("foldchangeXL_value_") ||
+            e.Name.Contains("foldchangeCSM_title_") ||
+            e.Name.Contains("foldchangeCSM_value_"));
 
+            while (foldChangeLables.Count() > 0)
+            {
+                information_grid.Children.Remove(foldChangeLables.ElementAt(0));
+            }
+
+            int qtdFoldChange = Regex.Split(MyResults.Params.ClassLabels, " ").Distinct().Count() - 1;
             int offsetX = 560;
 
             for (int i = 0; i < qtdFoldChange; i++)
@@ -431,24 +448,112 @@ namespace TMTXL.Results
                     }
                 }
 
-                var element = information_grid.Children.OfType<Label>().FirstOrDefault(e => e.Name == "foldchange_title_" + (i + 1));
-                if (element != null)
-                    information_grid.Children.Remove(element);
-
-                element = information_grid.Children.OfType<Label>().FirstOrDefault(e => e.Name == "foldchange_value_" + (i + 1));
-                if (element != null)
-                    information_grid.Children.Remove(element);
-
                 Label medianFoldChange_title = new();
-                medianFoldChange_title.Name = "foldchange_title_" + (i + 1);
-                medianFoldChange_title.Content = "Median fold changes-" + (i + 1) + ":";
+                medianFoldChange_title.Name = "foldchangePPI_title_" + (i + 1);
+                medianFoldChange_title.Content = qtdFoldChange == 1 ? "Median fold changes:" : "Median fold changes-" + (i + 1) + ":";
                 medianFoldChange_title.Margin = new Thickness(offsetX, 40, 0, 0);
                 information_grid.Children.Add(medianFoldChange_title);
 
                 Label medianFoldChange = new();
-                medianFoldChange.Name = "foldchange_value_" + (i + 1);
+                medianFoldChange.Name = "foldchangePPI_value_" + (i + 1);
                 medianFoldChange.Content = Math.Round(median, 4);
-                medianFoldChange.Margin = new Thickness(offsetX+135, 40, 0, 0);
+                medianFoldChange.Margin = new Thickness(offsetX + 135, 40, 0, 0);
+                medianFoldChange.FontWeight = System.Windows.FontWeights.Bold;
+                information_grid.Children.Add(medianFoldChange);
+                offsetX += 200;
+            }
+
+            offsetX = 560;
+
+            for (int i = 0; i < qtdFoldChange; i++)
+            {
+                var folds = MyResults.ResidueSearchResults.Select(a => a.log2FoldChange[i]).ToList();
+
+                double median = 0;
+                if (folds.Count > 0)
+                {
+                    if (folds.Count == 1)
+                        median = folds[0];
+                    else
+                    {
+                        median = Utils.Utils.Median(folds);
+                    }
+                }
+
+                Label medianFoldChange_title = new();
+                medianFoldChange_title.Name = "foldchangeResidue_title_" + (i + 1);
+                medianFoldChange_title.Content = qtdFoldChange == 1 ? "Median fold changes:" : "Median fold changes-" + (i + 1) + ":";
+                medianFoldChange_title.Margin = new Thickness(offsetX, 70, 0, 0);
+                information_grid.Children.Add(medianFoldChange_title);
+
+                Label medianFoldChange = new();
+                medianFoldChange.Name = "foldchangeResidue_value_" + (i + 1);
+                medianFoldChange.Content = Math.Round(median, 4);
+                medianFoldChange.Margin = new Thickness(offsetX + 135, 70, 0, 0);
+                medianFoldChange.FontWeight = System.Windows.FontWeights.Bold;
+                information_grid.Children.Add(medianFoldChange);
+                offsetX += 200;
+            }
+
+            offsetX = 560;
+
+            for (int i = 0; i < qtdFoldChange; i++)
+            {
+                var folds = MyResults.XLSearchResults.Select(a => a.log2FoldChange[i]).ToList();
+
+                double median = 0;
+                if (folds.Count > 0)
+                {
+                    if (folds.Count == 1)
+                        median = folds[0];
+                    else
+                    {
+                        median = Utils.Utils.Median(folds);
+                    }
+                }
+
+                Label medianFoldChange_title = new();
+                medianFoldChange_title.Name = "foldchangeXL_title_" + (i + 1);
+                medianFoldChange_title.Content = qtdFoldChange == 1 ? "Median fold changes:" : "Median fold changes-" + (i + 1) + ":";
+                medianFoldChange_title.Margin = new Thickness(offsetX, 100, 0, 0);
+                information_grid.Children.Add(medianFoldChange_title);
+
+                Label medianFoldChange = new();
+                medianFoldChange.Name = "foldchangeXL_value_" + (i + 1);
+                medianFoldChange.Content = Math.Round(median, 4);
+                medianFoldChange.Margin = new Thickness(offsetX + 135, 100, 0, 0);
+                medianFoldChange.FontWeight = System.Windows.FontWeights.Bold;
+                information_grid.Children.Add(medianFoldChange);
+                offsetX += 200;
+            }
+
+            offsetX = 560;
+
+            for (int i = 0; i < qtdFoldChange; i++)
+            {
+                var folds = MyResults.CSMSearchResults.Select(a => a.log2FoldChange[i]).ToList();
+
+                double median = 0;
+                if (folds.Count > 0)
+                {
+                    if (folds.Count == 1)
+                        median = folds[0];
+                    else
+                    {
+                        median = Utils.Utils.Median(folds);
+                    }
+                }
+
+                Label medianFoldChange_title = new();
+                medianFoldChange_title.Name = "foldchangeCSM_title_" + (i + 1);
+                medianFoldChange_title.Content = qtdFoldChange == 1 ? "Median fold changes:" : "Median fold changes-" + (i + 1) + ":";
+                medianFoldChange_title.Margin = new Thickness(offsetX, 130, 0, 0);
+                information_grid.Children.Add(medianFoldChange_title);
+
+                Label medianFoldChange = new();
+                medianFoldChange.Name = "foldchangeCSM_value_" + (i + 1);
+                medianFoldChange.Content = Math.Round(median, 4);
+                medianFoldChange.Margin = new Thickness(offsetX + 135, 130, 0, 0);
                 medianFoldChange.FontWeight = System.Windows.FontWeights.Bold;
                 information_grid.Children.Add(medianFoldChange);
                 offsetX += 200;
@@ -470,9 +575,18 @@ namespace TMTXL.Results
         /// Method responsible for setting up 'ResultsPackage' object and initialize data grid views
         /// </summary>
         /// <param name="myResults"></param>
-        public void Setup(ResultsPackage myResults)
+        public void Setup(ResultsPackage myResults, string fileName = "")
         {
             OriginalResults = myResults;
+
+            if (String.IsNullOrEmpty(fileName))
+                this.Title = "TMT - XL-MS :: Results";
+            else
+            {
+                string[] cols = Regex.Split(fileName, "\\\\");
+                this.Title = "TMT - XL-MS :: " + cols[cols.Length - 1];
+            }
+
 
             applyFilter();
             ppi_results_datagrid.Width = 400;
@@ -509,12 +623,12 @@ namespace TMTXL.Results
 
             var Grayseries = new ScatterSeries { MarkerType = MarkerType.Circle };
             Grayseries.MarkerFill = OxyColors.Transparent;
-            Grayseries.MarkerStroke = OxyColors.LightGray;
+            Grayseries.MarkerStroke = OxyColors.Gray;
             Grayseries.TrackerFormatString = "\nXL = {XL}\nSpec Count = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
 
             var Yellowseries = new ScatterSeries { MarkerType = MarkerType.Circle };
             Yellowseries.MarkerFill = OxyColors.Transparent;
-            Yellowseries.MarkerStroke = OxyColors.Gray;
+            Yellowseries.MarkerStroke = OxyColors.Gold;
             Yellowseries.TrackerFormatString = "\nXL = {XL}\nSpec Count = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
 
             var greenPoints = new List<CustomDataPoint>();
@@ -568,34 +682,46 @@ namespace TMTXL.Results
                 //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
                 if (xl.cSMs == null || xl.cSMs.Count == 0 || xl.pValue[0] == 0.5) { continue; }
 
-                double avgLogFold = xl.log2FoldChange[0];
-                double pValue = Math.Log(xl.pValue[0], 10) * (-1);
+                double avgLogFold = xl.log2FoldChange.Average();
+                double pValue = Math.Log(xl.pValue.Average(), 10) * (-1);
 
                 //if (avgLogFold < -3) { avgLogFold = -3; }
                 //if (avgLogFold > 3) { avgLogFold = 3; }
 
-                if (MyResults.XLSearchResults.Contains(xl))
+                int _index = MyResults.XLSearchResults.IndexOf(xl);
+                if (_index > -1)
                 {
                     if (avgLogFold > 0)
                     {
-                        if (pValue > (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) && avgLogFold > Utils.Utils.FOLD_CHANGE_CUTOFF) //p-value < 0.05 && fold change > 1
-                            greenPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                        if (pValue >= (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) &&
+                            avgLogFold >= Utils.Utils.FOLD_CHANGE_CUTOFF &&
+                            MyResults.XLSearchResults[_index].cSMs.Count >= Utils.Utils.SPEC_COUNT) //p-value < 0.05 && fold change > 1 && speccount > 1
+                            greenPoints.Add(new CustomDataPoint(pValue, avgLogFold, MyResults.XLSearchResults[_index].cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                         else
-                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, MyResults.XLSearchResults[_index].cSMs.Count, MyResults.XLSearchResults[_index].cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                     }
                     else
                     {
-                        if (pValue > (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) && avgLogFold < -Utils.Utils.FOLD_CHANGE_CUTOFF) //p-value < 0.05 && fold change < -1
-                            redPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                        if (pValue >= (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) &&
+                            avgLogFold <= -Utils.Utils.FOLD_CHANGE_CUTOFF &&
+                            MyResults.XLSearchResults[_index].cSMs.Count >= Utils.Utils.SPEC_COUNT) //p-value < 0.05 && fold change > 1 && speccount > 1
+                            redPoints.Add(new CustomDataPoint(pValue, avgLogFold, MyResults.XLSearchResults[_index].cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                         else
-                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, MyResults.XLSearchResults[_index].cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                     }
 
                     if (maxPvalue < pValue) maxPvalue = pValue;
                 }
                 else
                 {
-                    yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                    if (pValue >= (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) &&
+                            Math.Abs(avgLogFold) >= Utils.Utils.FOLD_CHANGE_CUTOFF)
+                    {
+                        yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                        if (maxPvalue < pValue) maxPvalue = pValue;
+                    }
+                    else
+                        grayPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                 }
             }
 
@@ -609,6 +735,7 @@ namespace TMTXL.Results
             foldChangeLowerThresholdLine.Points.Add(new OxyPlot.DataPoint(maxPvalue, -Utils.Utils.FOLD_CHANGE_CUTOFF));
 
             grayPoints.RemoveAll(a => a.X > maxPvalue);
+            yellowPoints.RemoveAll(a => a.X > maxPvalue);
             Greenseries.ItemsSource = greenPoints;
             Yellowseries.ItemsSource = yellowPoints;
             Redseries.ItemsSource = redPoints;
@@ -664,22 +791,22 @@ namespace TMTXL.Results
             var Greenseries = new ScatterSeries { MarkerType = MarkerType.Circle };
             Greenseries.MarkerFill = OxyColors.Green;
             Greenseries.MarkerStroke = OxyColors.Green;
-            Greenseries.TrackerFormatString = "\nPPI = {XL}\nSpec Count = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
+            Greenseries.TrackerFormatString = "\nPPI = {XL}\n#XL = {XLCount}\nSpec Count = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
 
             var Redseries = new ScatterSeries { MarkerType = MarkerType.Circle };
             Redseries.MarkerFill = OxyColors.Red;
             Redseries.MarkerStroke = OxyColors.Red;
-            Redseries.TrackerFormatString = "\nPPI = {XL}\nSpec Count = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
+            Redseries.TrackerFormatString = "\nPPI = {XL}\n#XL = {XLCount}\nSpec Count = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
 
             var Grayseries = new ScatterSeries { MarkerType = MarkerType.Circle };
             Grayseries.MarkerFill = OxyColors.Transparent;
             Grayseries.MarkerStroke = OxyColors.LightGray;
-            Grayseries.TrackerFormatString = "\nPPI = {XL}\nSpec Count = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
+            Grayseries.TrackerFormatString = "\nPPI = {XL}\n#XL = {XLCount}\nSpec Count = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
 
             var Yellowseries = new ScatterSeries { MarkerType = MarkerType.Circle };
             Yellowseries.MarkerFill = OxyColors.Transparent;
             Yellowseries.MarkerStroke = OxyColors.Gray;
-            Yellowseries.TrackerFormatString = "\nPPI = {XL}\nSpec Count = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
+            Yellowseries.TrackerFormatString = "\nPPI = {XL}\n#XL = {XLCount}\nSpec Count = {SpecCount}\n-Log(p-value) = {2:0.###}\nLog2(Fold change) = {4:0.###}";
 
             var greenPoints = new List<CustomDataPoint>();
             var redPoints = new List<CustomDataPoint>();
@@ -730,7 +857,7 @@ namespace TMTXL.Results
             foreach (ProteinProteinInteraction ppi in OriginalResults.PPIResults)
             {
                 //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
-                if (ppi.pValue == null || ppi.pValue[0] == 0.5) { continue; }
+                if (ppi.pValue == null || ppi.pValue[0] == 0.5 || ppi.XLs == null || ppi.XLs.Count == 0) { continue; }
 
                 double avgLogFold = ppi.log2FoldChange[0];
                 double pValue = Math.Log(ppi.pValue[0], 10) * (-1);
@@ -738,28 +865,30 @@ namespace TMTXL.Results
                 //if (avgLogFold < -3) { avgLogFold = -3; }
                 //if (avgLogFold > 3) { avgLogFold = 3; }
 
-                if (MyResults.PPIResults.Contains(ppi))
+
+                int _index = MyResults.PPIResults.IndexOf(ppi);
+                if (_index > -1)
                 {
                     if (avgLogFold > 0)
                     {
-                        if (pValue > (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) && avgLogFold > Utils.Utils.FOLD_CHANGE_CUTOFF) //p-value < 0.05 && fold change > 1
-                            greenPoints.Add(new CustomDataPoint(pValue, avgLogFold, ppi.specCount, ppi.gene_a + "-" + ppi.gene_b, 3));
+                        if (pValue >= (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) && avgLogFold >= Utils.Utils.FOLD_CHANGE_CUTOFF) //p-value < 0.05 && fold change > 1
+                            greenPoints.Add(new CustomDataPoint(pValue, avgLogFold, MyResults.PPIResults[_index].specCount, MyResults.PPIResults[_index].XLs.Count, ppi.gene_a + "-" + ppi.gene_b, 3));
                         else
-                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, ppi.specCount, ppi.gene_a + "-" + ppi.gene_b, 3));
+                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, MyResults.PPIResults[_index].specCount, MyResults.PPIResults[_index].XLs.Count, ppi.gene_a + "-" + ppi.gene_b, 3));
                     }
                     else
                     {
-                        if (pValue > (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) && avgLogFold < -Utils.Utils.FOLD_CHANGE_CUTOFF) //p-value < 0.05 && fold change < -1
-                            redPoints.Add(new CustomDataPoint(pValue, avgLogFold, ppi.specCount, ppi.gene_a + "-" + ppi.gene_b, 3));
+                        if (pValue >= (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) && avgLogFold <= -Utils.Utils.FOLD_CHANGE_CUTOFF) //p-value < 0.05 && fold change < -1
+                            redPoints.Add(new CustomDataPoint(pValue, avgLogFold, MyResults.PPIResults[_index].specCount, MyResults.PPIResults[_index].XLs.Count, ppi.gene_a + "-" + ppi.gene_b, 3));
                         else
-                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, ppi.specCount, ppi.gene_a + "-" + ppi.gene_b, 3));
+                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, MyResults.PPIResults[_index].specCount, MyResults.PPIResults[_index].XLs.Count, ppi.gene_a + "-" + ppi.gene_b, 3));
                     }
 
                     if (maxPvalue < pValue) maxPvalue = pValue;
                 }
                 else
                 {
-                    yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, ppi.specCount, ppi.gene_a + "-" + ppi.gene_b, 3));
+                    yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, ppi.specCount, ppi.XLs != null ? ppi.XLs.Count : 0, ppi.gene_a + "-" + ppi.gene_b, 3));
                 }
             }
 
@@ -1138,7 +1267,7 @@ namespace TMTXL.Results
                         MyResults = new();
 
                     MyResults = MyResults.DeserializeResults(dlg.FileName);
-                    this.Setup(MyResults);
+                    this.Setup(MyResults, dlg.FileName);
                     System.Windows.Forms.MessageBox.Show("The results have been load successfully!", "Information", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
                 }
                 catch (Exception exc)
@@ -1199,7 +1328,6 @@ namespace TMTXL.Results
             Utils.Utils.MIN_CROSSLINKEDPEPTIDES = (int)IntegerUpDownNoPeptides.Value;
             Utils.Utils.FOLD_CHANGE_CUTOFF = (double)IntegerUpDownFoldChangeCutoff.Value;
             Utils.Utils.PVALUE_CUTOFF = (double)IntegerUpDownPvalueCutoff.Value;
-            //Utils.Utils.PVALUE_CUTOFF = Math.Pow(10, (-1) * (double)IntegerUpDownPvalueCutoff.Value);
 
             applyFilter();
         }
@@ -1210,6 +1338,7 @@ namespace TMTXL.Results
         public double X { get; set; }
         public double Y { get; set; }
         public int SpecCount { get; set; }
+        public int XLCount { get; set; }
         public string XL { get; set; }
         public int Size { get; set; }
         public ScatterPoint GetScatterPoint() => new ScatterPoint(X, Y, Size, Size);
@@ -1219,6 +1348,16 @@ namespace TMTXL.Results
             X = x;
             Y = y;
             SpecCount = specCount;
+            XL = xl;
+            Size = size;
+        }
+
+        public CustomDataPoint(double x, double y, int specCount, int xlCount, string xl, int size)
+        {
+            X = x;
+            Y = y;
+            SpecCount = specCount;
+            XLCount = xlCount;
             XL = xl;
             Size = size;
         }

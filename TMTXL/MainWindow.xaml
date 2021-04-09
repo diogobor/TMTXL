@@ -61,9 +61,9 @@
 
                                 <TextBlock>Directory with RAW files:</TextBlock>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBox x:Name="raw_files_dir" MinWidth="450" HorizontalAlignment="Stretch"/>
+                                    <TextBox x:Name="raw_files_dir" MinWidth="450" HorizontalAlignment="Stretch" ToolTip="Set the directory where the RAW® files are. For more information, access the Read Me on Help menu."/>
 
-                                    <Button x:Name="raw_files_btn" Click="raw_files_btn_Click" Margin="10,0" HorizontalAlignment="Right" Cursor="Hand" ToolTip="Specify the directory where are the RAW files. For more information, access the Read Me on Help menu.">
+                                    <Button x:Name="raw_files_btn" Click="raw_files_btn_Click" Margin="10,0" HorizontalAlignment="Right" Cursor="Hand" ToolTip="Set the directory where the RAW® files are. For more information, access the Read Me on Help menu.">
                                         <DockPanel>
                                             <Image Source="/load.jpg"/>
                                         </DockPanel>
@@ -73,8 +73,8 @@
 
                                 <TextBlock>Directory with identifications:</TextBlock>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBox x:Name="results_dir" MinWidth="450" HorizontalAlignment="Stretch"/>
-                                    <Button x:Name="results_btn" Click="results_btn_Click" Margin="10,0" HorizontalAlignment="Right" Cursor="Hand" ToolTip="Specify the directory where are the result files. For more information, access the Read Me on Help menu.">
+                                    <TextBox x:Name="results_dir" MinWidth="450" HorizontalAlignment="Stretch" ToolTip="Set the directory where the result files provided by the search-engine are. For more information, access the Read Me on Help menu."/>
+                                    <Button x:Name="results_btn" Click="results_btn_Click" Margin="10,0" HorizontalAlignment="Right" Cursor="Hand" ToolTip="Set the directory where the result files provided by the search-engine are. For more information, access the Read Me on Help menu.">
                                         <DockPanel>
                                             <Image Source="/load.jpg"/>
                                         </DockPanel>
@@ -155,7 +155,7 @@
 
                             <TextBlock>Control channel:</TextBlock>
                             <ComboBox x:Name="control_channel_combobox" Width="100" HorizontalAlignment="Left" Margin="0,5,0,10"/>
-                            <TextBlock>Multinoch:</TextBlock>
+                            <TextBlock>MultiNoch:</TextBlock>
                             <ComboBox x:Name="multinoch_combobox" Width="100" HorizontalAlignment="Left" Margin="0,5,0,10">
                                 <ComboBoxItem IsSelected="True">None</ComboBoxItem>
                                 <ComboBoxItem>MS2-MS2</ComboBoxItem>

@@ -602,7 +602,7 @@ namespace TMTXL
                     resultPackage = resultPackage.DeserializeResults(dlg.FileName);
 
                     ResultsWin resultsWin = new ResultsWin();
-                    resultsWin.Setup(resultPackage);
+                    resultsWin.Setup(resultPackage, dlg.FileName);
                     resultsWin.ShowDialog();
                 }
                 catch (Exception exc)
