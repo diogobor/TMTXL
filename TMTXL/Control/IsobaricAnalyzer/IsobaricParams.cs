@@ -16,6 +16,7 @@ namespace IsobaricAnalyzer
         public List<int> ClassLabels { get; set; }
         public bool NormalizationIdentifiedSpectra { get; set; }
         public bool NormalizationAllSpectra { get; set; }
+        public bool NormalizationSpectraIntraClass { get; set; }
         public bool NormalizationPurityCorrection { get; set; }
         /// <summary>
         /// true = Peptide Quantitation Report

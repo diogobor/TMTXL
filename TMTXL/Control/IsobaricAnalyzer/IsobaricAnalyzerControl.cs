@@ -408,6 +408,23 @@ namespace IsobaricAnalyzer
                     }
                 }
 
+                if (myParams.NormalizationSpectraIntraClass)
+                {
+                    for (int n = 0; n < myParams.MarkerMZs.Count; n += 2)
+                    {
+                        if (n + 1 < csm.quantitation.Count)
+                        {
+                            double denominator = csm.quantitation[n] + csm.quantitation[n + 1];
+
+                            if (denominator > 0)
+                            {
+                                csm.quantitation[n] = (csm.quantitation[n] / denominator) * csm.quantitation[n];
+                                csm.quantitation[n + 1] = (csm.quantitation[n + 1] / denominator) * csm.quantitation[n + 1];
+                            }
+                        }
+                    }
+                }
+
                 if (csm.quantitation.Contains(double.NaN))
                 {
                     Console.WriteLine("ERROR: Problems on signal of scan " + fileName + "\tScan No:" + csm.scanNumber);
@@ -443,8 +460,11 @@ namespace IsobaricAnalyzer
 
             Console.WriteLine("Done!");
         }
-
-        private void MultinochMS2(List<MSUltraLight> ms2pectraFromAThermoFile)
+        /// <summary>
+        /// Method responsible for merging different MS2 spectra with the same precurosr
+        /// </summary>
+        /// <param name="ms2pectraFromAThermoFile"></param>
+        private void MultiNochMS2(List<MSUltraLight> ms2pectraFromAThermoFile)
         {
             Console.Write("Multinoch MS2-MS2 spectra ... ");
 
@@ -489,7 +509,7 @@ namespace IsobaricAnalyzer
         /// </summary>
         /// <param name="rawFile"></param>
         /// <param name="ms2pectraFromAThermoFile"></param>
-        private void MultinochSPSMS3(FileInfo rawFile, List<MSUltraLight> ms2pectraFromAThermoFile)
+        private void MultiNochSPSMS3(FileInfo rawFile, List<MSUltraLight> ms2pectraFromAThermoFile)
         {
             string current_fileNme = rawFile.Name.Substring(0, rawFile.Name.Length - rawFile.Extension.Length);
             int rawFileIndex = resultsPackage.FileNameIndex.IndexOf(current_fileNme);
@@ -538,11 +558,11 @@ namespace IsobaricAnalyzer
         {
             if (myParams.Multinoch == 1)//MS2-MS2
             {
-                this.MultinochMS2(ms2pectraFromAThermoFile);
+                this.MultiNochMS2(ms2pectraFromAThermoFile);
             }
             else
             {
-                this.MultinochSPSMS3(rawFile, ms2pectraFromAThermoFile);
+                this.MultiNochSPSMS3(rawFile, ms2pectraFromAThermoFile);
             }
 
         }

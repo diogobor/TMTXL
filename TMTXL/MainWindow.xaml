@@ -144,24 +144,21 @@
                         <StackPanel Orientation="Vertical">
 
                             <TextBlock>Isobaric m/z:</TextBlock>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBox x:Name="isobaric_masses_label_textbox" MinWidth="100" HorizontalAlignment="Stretch" Margin="0,5,0,10" ToolTip="Set all isobaric masses separated by one space, e.g., 126 127 128 129 130 131"/>
-                            </StackPanel>
-                            
+                            <TextBox x:Name="isobaric_masses_label_textbox" MinWidth="100" HorizontalAlignment="Stretch" Margin="0,5,0,10" ToolTip="Set all isobaric masses separated by one space, e.g., 126 127 128 129 130 131"/>
+
                             <TextBlock>Class labels:</TextBlock>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBox x:Name="class_label_textbox" MinWidth="100" HorizontalAlignment="Stretch" Margin="0,5,0,10" ToolTip="Set the classes separated by one space, e.g., 1 1 1 2 2 2"/>
-                            </StackPanel>
+                            <TextBox x:Name="class_label_textbox" MinWidth="100" HorizontalAlignment="Stretch" Margin="0,5,0,10" ToolTip="Set the classes separated by one space, e.g., 1 1 1 2 2 2"/>
 
                             <TextBlock>Control channel:</TextBlock>
                             <ComboBox x:Name="control_channel_combobox" Width="100" HorizontalAlignment="Left" Margin="0,5,0,10"/>
-                            <TextBlock>MultiNoch:</TextBlock>
-                            <ComboBox x:Name="multinoch_combobox" Width="100" HorizontalAlignment="Left" Margin="0,5,0,10">
+                            <TextBlock Width="100" HorizontalAlignment="Left" Margin="140,-53,0,0">MultiNoch:</TextBlock>
+                            <ComboBox x:Name="multinoch_combobox" Width="100" HorizontalAlignment="Left" Margin="140,-32,0,10">
                                 <ComboBoxItem IsSelected="True">None</ComboBoxItem>
                                 <ComboBoxItem>MS2-MS2</ComboBoxItem>
                                 <ComboBoxItem>SPS-MS3</ComboBoxItem>
                             </ComboBox>
                             <CheckBox x:Name="checkbox_normalization" IsChecked="True" Margin="0,0,0,10">Normalize spectra</CheckBox>
+                            <CheckBox x:Name="checkbox_normalization_intra_class" IsChecked="false" Margin="138,-25,0,10">Normalize spectra intra class</CheckBox>
                         </StackPanel>
                     </GroupBox>
                 </StackPanel>

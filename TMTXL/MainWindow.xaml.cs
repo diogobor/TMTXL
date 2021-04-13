@@ -276,6 +276,7 @@ namespace TMTXL
             {
             }
             myParams.NormalizeSpectra = (bool)checkbox_normalization.IsChecked;
+            myParams.NormalizeSpectraIntraClass = (bool)checkbox_normalization_intra_class.IsChecked;
             myParams.Multinoch = (short)multinoch_combobox.SelectedIndex;
             myParams.ChemicalLabel = ((ComboBoxItem)comboBoxPurityDefaults.SelectedValue).Content.ToString();
             return myParams;

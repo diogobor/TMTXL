@@ -29,7 +29,9 @@ namespace TMTXL.Control
         public int ControlChannel { get; set; }
         [ProtoMember(8)]
         public bool NormalizeSpectra { get; set; }
-        
+        [ProtoMember(9)]
+        public bool NormalizeSpectraIntraClass { get; set; }
+
 
         /// <summary>
         /// Empty constructor
