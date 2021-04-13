@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IsobaricAnalyzer;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -7,6 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
@@ -585,7 +587,7 @@ namespace TMTXL
             e.CanExecute = true;
         }
 
-        private void CommandBindingOpen_Executed(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
+        private async void CommandBindingOpen_Executed(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
         {
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
             dlg.FileName = ""; // Default file name
@@ -598,8 +600,17 @@ namespace TMTXL
             {
                 try
                 {
+                    IsobaricAnalyzerControl IsobaricAnalyzerControl = new IsobaricAnalyzerControl();
                     ResultsPackage resultPackage = new ResultsPackage();
-                    resultPackage = resultPackage.DeserializeResults(dlg.FileName);
+
+
+                    await Task.Run(
+                                () =>
+                                {
+                                    Console.WriteLine();
+                                    resultPackage = IsobaricAnalyzerControl.LoadResults(dlg.FileName);
+                                });
+
 
                     ResultsWin resultsWin = new ResultsWin();
                     resultsWin.Setup(resultPackage, dlg.FileName);

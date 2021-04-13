@@ -961,5 +961,16 @@ namespace IsobaricAnalyzer
 
             sw.Close();
         }
+
+        public void SaveReults(string FileName)
+        {
+            resultsPackage.SerializeResults(FileName);
+        }
+
+        public ResultsPackage LoadResults(string FileName)
+        {
+            ResultsPackage resultsPackage = new();
+            return resultsPackage.DeserializeResults(FileName);
+        }
     }
 }
