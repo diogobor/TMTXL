@@ -1023,29 +1023,41 @@ namespace TMTXL.Results
                 //if (avgLogFold < -3) { avgLogFold = -3; }
                 //if (avgLogFold > 3) { avgLogFold = 3; }
 
-                if (FilteredResults.XLSearchResults.ToList().Contains(xl))
+                int _index = FilteredResults.XLSearchResults.IndexOf(xl);
+                if (_index > -1)
                 {
                     if (avgLogFold > 0)
                     {
-                        if (pValue > (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) && avgLogFold > Utils.Utils.FOLD_CHANGE_CUTOFF) //p-value < 0.05 && fold change > 1
-                            greenPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                        if (pValue >= (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) &&
+                            avgLogFold >= Utils.Utils.FOLD_CHANGE_CUTOFF &&
+                            FilteredResults.XLSearchResults[_index].cSMs.Count >= Utils.Utils.SPEC_COUNT) //p-value < 0.05 && fold change > 1 && speccount > 1
+                            greenPoints.Add(new CustomDataPoint(pValue, avgLogFold, FilteredResults.XLSearchResults[_index].cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                         else
-                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, FilteredResults.XLSearchResults[_index].cSMs.Count, FilteredResults.XLSearchResults[_index].cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                     }
                     else
                     {
-                        if (pValue > (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) && avgLogFold < -Utils.Utils.FOLD_CHANGE_CUTOFF) //p-value < 0.05 && fold change < -1
-                            redPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                        if (pValue >= (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) &&
+                            avgLogFold <= -Utils.Utils.FOLD_CHANGE_CUTOFF &&
+                            FilteredResults.XLSearchResults[_index].cSMs.Count >= Utils.Utils.SPEC_COUNT) //p-value < 0.05 && fold change > 1 && speccount > 1
+                            redPoints.Add(new CustomDataPoint(pValue, avgLogFold, FilteredResults.XLSearchResults[_index].cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                         else
-                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                            yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, FilteredResults.XLSearchResults[_index].cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                     }
 
+                    if (maxPvalue < pValue) maxPvalue = pValue;
                 }
                 else
                 {
-                    yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                    if (pValue >= (Math.Log(Utils.Utils.PVALUE_CUTOFF, 10) * (-1)) &&
+                            Math.Abs(avgLogFold) >= Utils.Utils.FOLD_CHANGE_CUTOFF)
+                    {
+                        yellowPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
+                        if (maxPvalue < pValue) maxPvalue = pValue;
+                    }
+                    else
+                        grayPoints.Add(new CustomDataPoint(pValue, avgLogFold, xl.cSMs.Count, xl.cSMs[0].alpha_peptide + "-" + xl.cSMs[0].beta_peptide, 3));
                 }
-                if (maxPvalue < pValue) maxPvalue = pValue;
             }
 
             zeroLine.Points.Add(new OxyPlot.DataPoint(0, 0));
@@ -1218,7 +1230,7 @@ namespace TMTXL.Results
 
             string gene_b = GetSelectedValue(ppi_results_datagrid, 1);
 
-            List<XLSearchResult> xlSeachResult = FilteredResults.XLSearchResults.Where(a => a.cSMs.Any(b => b.genes_alpha.Contains(gene_a) &&
+            List<XLSearchResult> xlSeachResult = IsobaricAnalyzerControl.resultsPackage.XLSearchResults.Where(a => a.cSMs != null && a.cSMs.Any(b => b.genes_alpha.Contains(gene_a) &&
             b.genes_beta.Contains(gene_b))).ToList();
 
             if (xlSeachResult == null || xlSeachResult.Count == 0) return;
