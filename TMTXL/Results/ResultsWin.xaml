@@ -47,7 +47,7 @@
             <TextBox AcceptsReturn="True" />
         </DockPanel>
 
-        <Grid Grid.Row="0">
+        <Grid x:Name="filter_params_groupbox" Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto"/>
                 <ColumnDefinition Width="auto"/>
@@ -103,7 +103,7 @@
             <Label Margin="520,130,0,0" Content="??? " x:Name="csm_number" FontWeight="Bold" />
         </Grid>
         
-        <GroupBox Grid.Row="1" Margin="10,20,10,10" Padding="0,10,0,5">
+        <GroupBox x:Name="results_grid" Grid.Row="1" Margin="10,20,10,10" Padding="0,10,0,5">
             <GroupBox.Header>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock FontWeight="Bold">Results</TextBlock>

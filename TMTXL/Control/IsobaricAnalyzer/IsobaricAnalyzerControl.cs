@@ -35,8 +35,14 @@ namespace IsobaricAnalyzer
         public Dictionary<string, double[]> signalAllNormalizationDictionary { get; set; }
         public Dictionary<string, double[]> signalIdentifiedNormalizationDictionary { get; set; }
         public ResultsPackage resultsPackage { get; set; }
-
         public bool stdOut_console { get; set; } = true;
+        /// <summary>
+        /// Empty constructor
+        /// </summary>
+        public IsobaricAnalyzerControl()
+        {
+            resultsPackage = new();
+        }
 
         public void setCsmsToAnalyze(List<CSMSearchResult> psmList)
         {
@@ -987,10 +993,9 @@ namespace IsobaricAnalyzer
             resultsPackage.SerializeResults(FileName);
         }
 
-        public ResultsPackage LoadResults(string FileName)
+        public void LoadResults(string FileName)
         {
-            ResultsPackage resultsPackage = new();
-            return resultsPackage.DeserializeResults(FileName);
+            resultsPackage.DeserializeResults(FileName);
         }
     }
 }

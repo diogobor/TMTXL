@@ -50,7 +50,7 @@
 
                     <StackPanel Orientation="Vertical">
 
-                        <GroupBox Margin="10,20,10,10" Padding="5">
+                        <GroupBox x:Name="main_params_groupbox" Margin="10,20,10,10" Padding="5">
                             <GroupBox.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock FontWeight="Bold">Parameters</TextBlock>

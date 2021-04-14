@@ -141,11 +141,26 @@ namespace TMTXL.Control
         }
 
         /// <summary>
+        /// Method responsible for filling the objects
+        /// </summary>
+        /// <param name="_rp"></param>
+        private void fillObjects(ResultsPackage _rp)
+        {
+            this.CSMSearchResults = _rp.CSMSearchResults;
+            this.FileNameIndex = _rp.FileNameIndex;
+            this.Params = _rp.Params;
+            this.PPIResults = _rp.PPIResults;
+            this.ResidueSearchResults = _rp.ResidueSearchResults;
+            this.Spectra = _rp.Spectra;
+            this.XLSearchResults = _rp.XLSearchResults;
+        }
+
+        /// <summary>
         /// Method responsible for deserializing results
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
-        public ResultsPackage DeserializeResults(string fileName)
+        public void DeserializeResults(string fileName)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
@@ -166,7 +181,7 @@ namespace TMTXL.Control
                         ms.Seek(0, SeekOrigin.Begin); // <-- must do this after writing the stream!
 
                         List<ResultsPackage> toDeserialize = Serializer.DeserializeItems<ResultsPackage>(ms, PrefixStyle.Base128, 1).ToList();
-                        return toDeserialize[0];
+                        this.fillObjects(toDeserialize[0]);
                     }
                 }
                 else
@@ -225,7 +240,7 @@ namespace TMTXL.Control
                         }
                     }
                     Console.WriteLine(" Loading results: 100%");
-                    return TotalResults;
+                    this.fillObjects(TotalResults);
                 }
             }
         }

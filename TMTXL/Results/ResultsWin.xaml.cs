@@ -1284,6 +1284,10 @@ namespace TMTXL.Results
                     if (IsobaricAnalyzerControl == null)
                         IsobaricAnalyzerControl = new();
 
+                    #region Disabling some fields
+                    filter_params_groupbox.IsEnabled = false;
+                    results_grid.IsEnabled = false;
+                    #endregion
 
                     await Task.Run(
                                 () =>
@@ -1291,6 +1295,13 @@ namespace TMTXL.Results
                                     Console.WriteLine();
                                     IsobaricAnalyzerControl.LoadResults(dlg.FileName);
                                 });
+
+                    this.Setup(IsobaricAnalyzerControl.resultsPackage, dlg.FileName);
+
+                    #region Enabling some fields
+                    filter_params_groupbox.IsEnabled = true;
+                    results_grid.IsEnabled = true;
+                    #endregion
 
                     System.Windows.Forms.MessageBox.Show("The results have been load successfully!", "Information", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
                 }

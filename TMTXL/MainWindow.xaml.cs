@@ -602,19 +602,30 @@ namespace TMTXL
                 try
                 {
                     IsobaricAnalyzerControl IsobaricAnalyzerControl = new IsobaricAnalyzerControl();
-                    ResultsPackage resultPackage = new ResultsPackage();
 
+                    #region Disabling some fields
+                    main_params_groupbox.IsEnabled = false;
+                    dataGridPurityCorrections.IsEnabled = false;
+                    comboBoxPurityDefaults.IsEnabled = false;
+                    TabItemAdvancedParams.IsEnabled = false;
+                    #endregion
 
                     await Task.Run(
                                 () =>
                                 {
                                     Console.WriteLine();
-                                    resultPackage = IsobaricAnalyzerControl.LoadResults(dlg.FileName);
+                                    IsobaricAnalyzerControl.LoadResults(dlg.FileName);
                                 });
 
+                    #region Enabling some fields
+                    main_params_groupbox.IsEnabled = true;
+                    dataGridPurityCorrections.IsEnabled = true;
+                    comboBoxPurityDefaults.IsEnabled = true;
+                    TabItemAdvancedParams.IsEnabled = true;
+                    #endregion
 
                     ResultsWin resultsWin = new ResultsWin();
-                    resultsWin.Setup(resultPackage, dlg.FileName);
+                    resultsWin.Setup(IsobaricAnalyzerControl.resultsPackage, dlg.FileName);
                     resultsWin.ShowDialog();
                 }
                 catch (Exception exc)
