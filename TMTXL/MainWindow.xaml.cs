@@ -604,6 +604,7 @@ namespace TMTXL
                     IsobaricAnalyzerControl IsobaricAnalyzerControl = new IsobaricAnalyzerControl();
 
                     #region Disabling some fields
+                    tabControl.SelectedIndex = 0;
                     main_params_groupbox.IsEnabled = false;
                     dataGridPurityCorrections.IsEnabled = false;
                     comboBoxPurityDefaults.IsEnabled = false;
