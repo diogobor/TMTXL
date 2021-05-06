@@ -71,17 +71,9 @@ namespace IsobaricAnalyzer
         /// </summary>
         public void computeQuantitation()
         {
-
-            #region remove multiplex spectra
-
-            this.removeMultiplexSpectra();
-
-            #endregion
-
             this.processRawFiles();
 
             #region initialize dictionary(ies) for the normalize reporter ions (channels) of all or identified spectra
-
 
             if (myParams.NormalizationIdentifiedSpectra)
             {
@@ -835,76 +827,6 @@ namespace IsobaricAnalyzer
 
             #endregion
         }
-
-        /// <summary>
-        /// Method responsible for removing multiplex spectra
-        /// </summary>
-        private void removeMultiplexSpectra()
-        {
-            if (myParams.YadaMultiplexCorrectionDir.Length > 0)
-            {
-                if (csmsToAnalyze == null)
-                    throw new Exception("There is no spectra to be multiplexed.");
-
-                YadaMultiplexFinder ymc = null;
-
-                Console.WriteLine("Reading Yada results");
-                ymc = new YadaMultiplexFinder(new DirectoryInfo(myParams.YadaMultiplexCorrectionDir));
-                Console.WriteLine("Done loading Yada results");
-
-                //Remove multiplexed spectra from sepro results
-                int removedCounter = 0;
-
-                foreach (KeyValuePair<string, List<int>> kvp in ymc.fileNameScanNumberMultiplexDictionary)
-                {
-                    Console.WriteLine("Removing multiplexed spectra for file :: " + kvp.Key);
-
-                    string cleanName = kvp.Key.Substring(0, kvp.Key.Length - 4);
-                    cleanName += ".sqt";
-                    foreach (int scnNo in kvp.Value)
-                    {
-                        int index = csmsToAnalyze.FindIndex(a => a.psm.scanNumber == scnNo && a.psm.fileName.Equals(cleanName));
-
-                        if (index >= 0)
-                        {
-                            Console.Write(csmsToAnalyze[index].psm.scanNumber + " ");
-
-                            removedCounter++;
-                            csmsToAnalyze.RemoveAt(index);
-                        }
-                    }
-
-                    Console.WriteLine("\n");
-                }
-
-                Console.WriteLine("Done removing multiplexed spectra :: " + removedCounter);
-            }
-        }
-
-        /// <summary>
-        /// Method responsible for reading SEPro file and fill fastaItems and psmsToAnalyze objects
-        /// </summary>
-        private void readSeproFile()
-        {
-            Console.WriteLine("Loading SEPro2 file");
-
-            //if (myParams.InputFile == null || !File.Exists(myParams.InputFile.FullName))
-            //{
-            //    throw new Exception("Unable to find SEPro file");
-            //}
-
-            //resultPackage = ResultPackage.Load(myParams.InputFile.FullName);
-            //if (resultPackage.MySpectra == null || resultPackage.MySpectra.Count == 0)
-            //    throw new Exception("Unable to find spectra in SEPro file.");
-
-            //Console.WriteLine("Done reading SEPro result");
-            //theFastaItems = resultPackage.MyProteins.MyProteinList.Select(a => new FastaItem(a.Locus, a.Sequence, a.Description)).ToList();
-            //csmsToAnalyze = resultPackage.GetCombinedPSMMassSpectra();
-        }
-
-        /// <summary>
-        /// Method responsible for applying the normalization (by taking into account all or only identified spectra) to the quantitation values
-        /// </summary>
 
         /// <summary>
         /// Method responsible for getting the isobaric signal
