@@ -203,7 +203,7 @@ namespace IsobaricAnalyzer
 
             foreach (var xl in residueDic)
             {
-                xl.csms.RemoveAll(a => a.log2FoldChange.Any(b => double.IsNaN(b)));
+                xl.csms.RemoveAll(a => a.log2FoldChange == null || (a.log2FoldChange != null && a.log2FoldChange.Any(b => double.IsNaN(b))));
                 if (xl.csms.Count == 0) continue;
 
                 List<string> alpha_ptns = new List<string>();
@@ -303,79 +303,80 @@ namespace IsobaricAnalyzer
             int old_progress = 0;
             double qtdXL = xlDic.Count();
 
-            foreach (var xl in xlDic)
-            {
-                xl.csms.RemoveAll(a => a.log2FoldChange.Any(b => double.IsNaN(b)));
-                if (xl.csms.Count == 0) continue;
-
-                List<string> alpha_ptns = new List<string>();
-                List<string> beta_ptns = new List<string>();
-                List<string> alpha_genes = new List<string>();
-                List<string> beta_genes = new List<string>();
-                xl.csms.ForEach(a =>
+                foreach (var xl in xlDic)
                 {
-                    alpha_ptns.AddRange(a.proteins_alpha);
-                    beta_ptns.AddRange(a.proteins_beta);
-                    alpha_genes.AddRange(a.genes_alpha);
-                    beta_genes.AddRange(a.genes_beta);
-                }
-                );
+                    xl.csms.RemoveAll(a => a.log2FoldChange == null || (a.log2FoldChange != null && a.log2FoldChange.Any(b => double.IsNaN(b))));
+                    if (xl.csms.Count == 0) continue;
 
-                XLSearchResult xlSr = new XLSearchResult(xl.csms);
-                xlSr.quantitation = xl.csms[0].quantitation;
-                xlSr.log2FoldChange = xl.csms[0].log2FoldChange;
-                xlSr.pValue = xl.csms[0].pValue;
-
-                if (xl.csms.Count > 1)
-                {
-                    int qtdFoldChange = xl.csms[0].log2FoldChange.Count;
-                    xlSr.log2FoldChange = new();
-                    xlSr.pValue = new();
-                    for (int i = 0; i < qtdFoldChange; i++)
+                    List<string> alpha_ptns = new List<string>();
+                    List<string> beta_ptns = new List<string>();
+                    List<string> alpha_genes = new List<string>();
+                    List<string> beta_genes = new List<string>();
+                    xl.csms.ForEach(a =>
                     {
-                        var folds = xl.csms.Select(a => a.log2FoldChange[i]).ToList();
+                        alpha_ptns.AddRange(a.proteins_alpha);
+                        beta_ptns.AddRange(a.proteins_beta);
+                        alpha_genes.AddRange(a.genes_alpha);
+                        beta_genes.AddRange(a.genes_beta);
+                    }
+                    );
 
-                        double median = 0;
-                        if (folds.Count > 0)
+                    XLSearchResult xlSr = new XLSearchResult(xl.csms);
+                    xlSr.quantitation = xl.csms[0].quantitation;
+                    xlSr.log2FoldChange = xl.csms[0].log2FoldChange;
+                    xlSr.pValue = xl.csms[0].pValue;
+
+                    if (xl.csms.Count > 1)
+                    {
+                        int qtdFoldChange = xl.csms[0].log2FoldChange.Count;
+                        xlSr.log2FoldChange = new();
+                        xlSr.pValue = new();
+                        for (int i = 0; i < qtdFoldChange; i++)
                         {
-                            if (folds.Count == 1)
-                                median = folds[0];
+                            var folds = xl.csms.Select(a => a.log2FoldChange[i]).ToList();
+
+                            double median = 0;
+                            if (folds.Count > 0)
+                            {
+                                if (folds.Count == 1)
+                                    median = folds[0];
+                                else
+                                {
+                                    median = Utils.Median(folds);
+                                }
+                            }
+
+                            xlSr.log2FoldChange.Add(median);
+                            xlSr.pValue.Add(folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xl.csms[0].pValue[i]);
+                        }
+                    }
+
+                    resultsPackage.XLSearchResults.Add(xlSr);
+
+                    lock (progress_lock)
+                    {
+                        xl_processed++;
+                        int new_progress = (int)((double)xl_processed / (qtdXL) * 100);
+                        if (new_progress > old_progress)
+                        {
+                            old_progress = new_progress;
+
+                            if (stdOut_console)
+                            {
+                                int currentLineCursor = Console.CursorTop;
+                                Console.SetCursorPosition(0, Console.CursorTop);
+                                Console.Write("XL Quantitation progress: " + old_progress + "%");
+                                Console.SetCursorPosition(0, currentLineCursor);
+
+                            }
                             else
                             {
-                                median = Utils.Median(folds);
+                                Console.Write("XL Quantitation progress: " + old_progress + "%");
                             }
                         }
-
-                        xlSr.log2FoldChange.Add(median);
-                        xlSr.pValue.Add(folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xl.csms[0].pValue[i]);
                     }
                 }
 
-                resultsPackage.XLSearchResults.Add(xlSr);
-
-                lock (progress_lock)
-                {
-                    xl_processed++;
-                    int new_progress = (int)((double)xl_processed / (qtdXL) * 100);
-                    if (new_progress > old_progress)
-                    {
-                        old_progress = new_progress;
-
-                        if (stdOut_console)
-                        {
-                            int currentLineCursor = Console.CursorTop;
-                            Console.SetCursorPosition(0, Console.CursorTop);
-                            Console.Write("XL Quantitation progress: " + old_progress + "%");
-                            Console.SetCursorPosition(0, currentLineCursor);
-
-                        }
-                        else
-                        {
-                            Console.Write("XL Quantitation progress: " + old_progress + "%");
-                        }
-                    }
-                }
-            }
         }
 
         /// <summary>

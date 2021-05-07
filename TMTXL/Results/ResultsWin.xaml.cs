@@ -128,15 +128,22 @@ namespace TMTXL.Results
                     break;
             }
 
-            int qtdUniqueClass = Regex.Split(FilteredResults.Params.ClassLabels, " ").Distinct().Count();
-            for (int i = 1; i <= qtdUniqueClass; i++)
-                dtCSM.Columns.Add("Avg " + i + " not Null", typeof(double));
-            for (int i = 1; i <= qtdUniqueClass - 1; i++)
-                dtCSM.Columns.Add("Log2(Fold Change)" + i, typeof(double));
-            for (int i = 1; i <= qtdUniqueClass - 1; i++)
-                dtCSM.Columns.Add("p-value" + i, typeof(double));
+            var filteredCSMs = FilteredResults.CSMSearchResults;
 
-            foreach (CSMSearchResult csm in FilteredResults.CSMSearchResults.OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.pValue[0]))
+            int qtdUniqueClass = Regex.Split(FilteredResults.Params.ClassLabels, " ").Distinct().Count();
+            if (qtdUniqueClass > 1)
+            {
+                for (int i = 1; i <= qtdUniqueClass; i++)
+                    dtCSM.Columns.Add("Avg " + i + " not Null", typeof(double));
+                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                    dtCSM.Columns.Add("Log2(Fold Change)" + i, typeof(double));
+                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                    dtCSM.Columns.Add("p-value" + i, typeof(double));
+
+                FilteredResults.CSMSearchResults.OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.pValue[0]);
+            }
+
+            foreach (CSMSearchResult csm in filteredCSMs)
             {
                 if (csm.quantitation == null) continue;
 
@@ -198,13 +205,16 @@ namespace TMTXL.Results
                         break;
                 }
 
-                for (int i = 1; i <= qtdUniqueClass; i++)
-                    row["Avg " + i + " not Null"] = Utils.Utils.RoundUp(csm.avg_notNull[i - 1]);
-
-                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                if (qtdUniqueClass > 1)
                 {
-                    row["Log2(Fold Change)" + i] = Math.Round(csm.log2FoldChange[i - 1], 4);
-                    row["p-value" + i] = Math.Round(csm.pValue[i - 1], 4);
+                    for (int i = 1; i <= qtdUniqueClass; i++)
+                        row["Avg " + i + " not Null"] = Utils.Utils.RoundUp(csm.avg_notNull[i - 1]);
+
+                    for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                    {
+                        row["Log2(Fold Change)" + i] = Math.Round(csm.log2FoldChange[i - 1], 4);
+                        row["p-value" + i] = Math.Round(csm.pValue[i - 1], 4);
+                    }
                 }
                 dtCSM.Rows.Add(row);
             }
@@ -228,13 +238,21 @@ namespace TMTXL.Results
             dtXL.Columns.Add("α position", typeof(int));
             dtXL.Columns.Add("β position", typeof(int));
             dtXL.Columns.Add("Spec count", typeof(int));
-            int qtdUniqueClass = Regex.Split(FilteredResults.Params.ClassLabels, " ").Distinct().Count();
-            for (int i = 1; i <= qtdUniqueClass - 1; i++)
-                dtXL.Columns.Add("Log2(Fold Change)" + i, typeof(double));
-            for (int i = 1; i <= qtdUniqueClass - 1; i++)
-                dtXL.Columns.Add("p-value" + i, typeof(double));
 
-            foreach (XLSearchResult xl in FilteredResults.XLSearchResults.OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.cSMs.Count))
+            var filteredXLs = FilteredResults.XLSearchResults;
+
+            int qtdUniqueClass = Regex.Split(FilteredResults.Params.ClassLabels, " ").Distinct().Count();
+            if (qtdUniqueClass > 1)
+            {
+                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                    dtXL.Columns.Add("Log2(Fold Change)" + i, typeof(double));
+                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                    dtXL.Columns.Add("p-value" + i, typeof(double));
+
+                filteredXLs = FilteredResults.XLSearchResults.OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.cSMs.Count).ToList();
+            }
+
+            foreach (XLSearchResult xl in filteredXLs)
             {
                 var row = dtXL.NewRow();
                 row["Gene A"] = String.Join(" ,", xl.cSMs[0].genes_alpha);
@@ -245,10 +263,13 @@ namespace TMTXL.Results
                 row["β position"] = xl.cSMs[0].beta_pept_xl_pos;
                 row["Spec count"] = xl.cSMs.Count;
 
-                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                if (qtdUniqueClass > 1)
                 {
-                    row["Log2(Fold Change)" + i] = Math.Round(xl.log2FoldChange[i - 1], 4);
-                    row["p-value" + i] = Math.Round(xl.pValue[i - 1], 4);
+                    for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                    {
+                        row["Log2(Fold Change)" + i] = Math.Round(xl.log2FoldChange[i - 1], 4);
+                        row["p-value" + i] = Math.Round(xl.pValue[i - 1], 4);
+                    }
                 }
                 dtXL.Rows.Add(row);
             }
@@ -270,13 +291,21 @@ namespace TMTXL.Results
             dtResidues.Columns.Add("α position", typeof(int));
             dtResidues.Columns.Add("β position", typeof(int));
             dtResidues.Columns.Add("Spec count", typeof(int));
-            int qtdUniqueClass = Regex.Split(FilteredResults.Params.ClassLabels, " ").Distinct().Count();
-            for (int i = 1; i <= qtdUniqueClass - 1; i++)
-                dtResidues.Columns.Add("Log2(Fold Change)" + i, typeof(double));
-            for (int i = 1; i <= qtdUniqueClass - 1; i++)
-                dtResidues.Columns.Add("p-value" + i, typeof(double));
 
-            foreach (XLSearchResult xl in FilteredResults.ResidueSearchResults.OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.cSMs.Count))
+            var filteredResidues = FilteredResults.ResidueSearchResults;
+
+            int qtdUniqueClass = Regex.Split(FilteredResults.Params.ClassLabels, " ").Distinct().Count();
+            if (qtdUniqueClass > 1)
+            {
+                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                    dtResidues.Columns.Add("Log2(Fold Change)" + i, typeof(double));
+                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                    dtResidues.Columns.Add("p-value" + i, typeof(double));
+
+                filteredResidues = FilteredResults.ResidueSearchResults.OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.cSMs.Count).ToList();
+            }
+
+            foreach (XLSearchResult xl in filteredResidues)
             {
                 var row = dtResidues.NewRow();
                 row["Gene A"] = xl.cSMs[0].genes_alpha[0];
@@ -284,10 +313,14 @@ namespace TMTXL.Results
                 row["α position"] = xl.cSMs[0].alpha_pept_xl_pos;
                 row["β position"] = xl.cSMs[0].beta_pept_xl_pos;
                 row["Spec count"] = xl.cSMs.Count;
-                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+
+                if (qtdUniqueClass > 1)
                 {
-                    row["Log2(Fold Change)" + i] = Math.Round(xl.log2FoldChange[i - 1], 4);
-                    row["p-value" + i] = Math.Round(xl.pValue[i - 1], 4);
+                    for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                    {
+                        row["Log2(Fold Change)" + i] = Math.Round(xl.log2FoldChange[i - 1], 4);
+                        row["p-value" + i] = Math.Round(xl.pValue[i - 1], 4);
+                    }
                 }
 
                 dtResidues.Rows.Add(row);
@@ -311,17 +344,23 @@ namespace TMTXL.Results
             dtPPI.Columns.Add("PPI score", typeof(double));
             dtPPI.Columns.Add("XL count", typeof(int));
             dtPPI.Columns.Add("Spec count", typeof(int));
+
+            var filteredPPI = FilteredResults.PPIResults;
+
             int qtdUniqueClass = Regex.Split(FilteredResults.Params.ClassLabels, " ").Distinct().Count();
-            for (int i = 1; i <= qtdUniqueClass - 1; i++)
-                dtPPI.Columns.Add("Log2(Fold Change)" + i, typeof(double));
-            for (int i = 1; i <= qtdUniqueClass - 1; i++)
-                dtPPI.Columns.Add("p-value" + i, typeof(double));
-
-            foreach (ProteinProteinInteraction ppi in FilteredResults.PPIResults.OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.specCount))
+            if (qtdUniqueClass > 1)
             {
-                if (ppi.pValue[0] == 0 && ppi.log2FoldChange[0] == 0) continue;
+                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                    dtPPI.Columns.Add("Log2(Fold Change)" + i, typeof(double));
+                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                    dtPPI.Columns.Add("p-value" + i, typeof(double));
 
-                if (ppi.XLs.Count < Utils.Utils.MIN_CROSSLINKEDPEPTIDES || ppi.specCount < Utils.Utils.SPEC_COUNT) continue;
+                filteredPPI = FilteredResults.PPIResults.OrderByDescending(a => a.log2FoldChange[0]).ThenByDescending(a => a.specCount).ToList();
+            }
+
+            foreach (ProteinProteinInteraction ppi in filteredPPI)
+            {
+                if (ppi.XLs == null || ppi.XLs.Count < Utils.Utils.MIN_CROSSLINKEDPEPTIDES || ppi.specCount < Utils.Utils.SPEC_COUNT) continue;
 
                 var row = dtPPI.NewRow();
                 row["Gene A"] = ppi.gene_a;
@@ -331,10 +370,16 @@ namespace TMTXL.Results
                 row["PPI score"] = Utils.Utils.RoundUp(ppi.score, 30);
                 row["Spec count"] = ppi.specCount;
                 row["XL count"] = ppi.XLs.Count;
-                for (int i = 1; i <= qtdUniqueClass - 1; i++)
+
+                if (qtdUniqueClass > 1)
                 {
-                    row["Log2(Fold Change)" + i] = Math.Round(ppi.log2FoldChange[i - 1], 4);
-                    row["p-value" + i] = Math.Round(ppi.pValue[i - 1], 4);
+                    if (ppi.pValue[0] == 0 && ppi.log2FoldChange[0] == 0) continue;
+
+                    for (int i = 1; i <= qtdUniqueClass - 1; i++)
+                    {
+                        row["Log2(Fold Change)" + i] = Math.Round(ppi.log2FoldChange[i - 1], 4);
+                        row["p-value" + i] = Math.Round(ppi.pValue[i - 1], 4);
+                    }
                 }
                 dtPPI.Rows.Add(row);
             }
@@ -391,27 +436,33 @@ namespace TMTXL.Results
             #region log2 fold change & p-value
             if (FilteredResults == null) return;
 
-            FilteredResults.CSMSearchResults = FilteredResults.CSMSearchResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
+            int qtdFoldChange = Regex.Split(FilteredResults.Params.ClassLabels, " ").Distinct().Count() - 1;
 
-            FilteredResults.XLSearchResults = FilteredResults.XLSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
-            FilteredResults.XLSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange.Any(c => Math.Abs(c) < Utils.Utils.FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > Utils.Utils.PVALUE_CUTOFF)); });
-            FilteredResults.XLSearchResults.RemoveAll(a => a.cSMs.Count < Utils.Utils.SPEC_COUNT);
-
-            FilteredResults.ResidueSearchResults = FilteredResults.ResidueSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
-            FilteredResults.ResidueSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange != null && b.pValue != null && b.log2FoldChange.Any(c => Math.Abs(c) < Utils.Utils.FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > Utils.Utils.PVALUE_CUTOFF)); });
-            FilteredResults.ResidueSearchResults.RemoveAll(a => a.cSMs.Count < Utils.Utils.SPEC_COUNT);
-
-            FilteredResults.PPIResults = FilteredResults.PPIResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
-            FilteredResults.PPIResults.ForEach(a =>
+            if (qtdFoldChange > 0)
             {
-                a.specCount = 0;
-                if (a.XLs != null)
+                FilteredResults.CSMSearchResults = FilteredResults.CSMSearchResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
+
+                FilteredResults.XLSearchResults = FilteredResults.XLSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
+                FilteredResults.XLSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange.Any(c => Math.Abs(c) < Utils.Utils.FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > Utils.Utils.PVALUE_CUTOFF)); });
+                FilteredResults.XLSearchResults.RemoveAll(a => a.cSMs.Count < Utils.Utils.SPEC_COUNT);
+
+                FilteredResults.ResidueSearchResults = FilteredResults.ResidueSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
+                FilteredResults.ResidueSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange != null && b.pValue != null && b.log2FoldChange.Any(c => Math.Abs(c) < Utils.Utils.FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > Utils.Utils.PVALUE_CUTOFF)); });
+                FilteredResults.ResidueSearchResults.RemoveAll(a => a.cSMs.Count < Utils.Utils.SPEC_COUNT);
+
+                FilteredResults.PPIResults = FilteredResults.PPIResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
+                FilteredResults.PPIResults.ForEach(a =>
                 {
-                    a.XLs.RemoveAll(b => b.log2FoldChange != null && b.pValue != null && b.log2FoldChange.Any(c => Math.Abs(c) < Utils.Utils.FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > Utils.Utils.PVALUE_CUTOFF));
-                    a.specCount = a.XLs.Where(b => b.cSMs != null).Sum(b => b.cSMs.Count);
-                }
-            });
-            FilteredResults.PPIResults.RemoveAll(a => a.XLs == null || a.XLs.Count < Utils.Utils.MIN_CROSSLINKEDPEPTIDES || a.specCount < Utils.Utils.SPEC_COUNT);
+                    a.specCount = 0;
+                    if (a.XLs != null)
+                    {
+                        a.XLs.RemoveAll(b => b.log2FoldChange != null && b.pValue != null && b.log2FoldChange.Any(c => Math.Abs(c) < Utils.Utils.FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > Utils.Utils.PVALUE_CUTOFF));
+                        a.specCount = a.XLs.Where(b => b.cSMs != null).Sum(b => b.cSMs.Count);
+                    }
+                });
+                FilteredResults.PPIResults.RemoveAll(a => a.XLs == null || a.XLs.Count < Utils.Utils.MIN_CROSSLINKEDPEPTIDES || a.specCount < Utils.Utils.SPEC_COUNT);
+
+            }
             #endregion
 
             csm_results_datagrid.ItemsSource = createDataTableCSM().AsDataView();
@@ -434,7 +485,6 @@ namespace TMTXL.Results
                 information_grid.Children.Remove(foldChangeLables.ElementAt(0));
             }
 
-            int qtdFoldChange = Regex.Split(FilteredResults.Params.ClassLabels, " ").Distinct().Count() - 1;
             int offsetX = 560;
 
             for (int i = 0; i < qtdFoldChange; i++)
@@ -686,7 +736,7 @@ namespace TMTXL.Results
             foreach (XLSearchResult xl in IsobaricAnalyzerControl.resultsPackage.XLSearchResults)
             {
                 //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
-                if (xl.cSMs == null || xl.cSMs.Count == 0 || xl.pValue[0] == 0.5) { continue; }
+                if (xl.cSMs == null || xl.cSMs.Count == 0 || xl.pValue == null || xl.pValue.Count == 0 || xl.pValue[0] == 0.5) { continue; }
 
                 double avgLogFold = xl.log2FoldChange.Average();
                 double pValue = Math.Log(xl.pValue.Average(), 10) * (-1);
@@ -863,7 +913,7 @@ namespace TMTXL.Results
             foreach (ProteinProteinInteraction ppi in IsobaricAnalyzerControl.resultsPackage.PPIResults)
             {
                 //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
-                if (ppi.pValue == null || ppi.pValue[0] == 0.5 || ppi.XLs == null || ppi.XLs.Count == 0) { continue; }
+                if (ppi.pValue == null || ppi.pValue.Count == 0 || ppi.pValue[0] == 0.5 || ppi.XLs == null || ppi.XLs.Count == 0) { continue; }
 
                 double avgLogFold = ppi.log2FoldChange[0];
                 double pValue = Math.Log(ppi.pValue[0], 10) * (-1);
@@ -1015,7 +1065,7 @@ namespace TMTXL.Results
             foreach (XLSearchResult xl in xlSearchResults)
             {
                 //Skip Quants composed mainly of zeros or quants that have exactly 0.5 as a p-value
-                if (xl.pValue[0] == 0.5) { continue; }
+                if (xl.pValue == null || xl.pValue.Count == 0 || xl.pValue[0] == 0.5) { continue; }
 
                 double avgLogFold = xl.log2FoldChange[0];
                 double pValue = Math.Log(xl.pValue[0], 10) * (-1);
