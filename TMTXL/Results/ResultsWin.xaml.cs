@@ -441,27 +441,9 @@ namespace TMTXL.Results
             if (qtdFoldChange > 0)
             {
                 FilteredResults.CSMSearchResults = FilteredResults.CSMSearchResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
-
                 FilteredResults.XLSearchResults = FilteredResults.XLSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
-                FilteredResults.XLSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange.Any(c => Math.Abs(c) < Utils.Utils.FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > Utils.Utils.PVALUE_CUTOFF)); });
-                FilteredResults.XLSearchResults.RemoveAll(a => a.cSMs.Count < Utils.Utils.SPEC_COUNT);
-
                 FilteredResults.ResidueSearchResults = FilteredResults.ResidueSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
-                FilteredResults.ResidueSearchResults.ForEach(a => { a.cSMs.RemoveAll(b => b.log2FoldChange != null && b.pValue != null && b.log2FoldChange.Any(c => Math.Abs(c) < Utils.Utils.FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > Utils.Utils.PVALUE_CUTOFF)); });
-                FilteredResults.ResidueSearchResults.RemoveAll(a => a.cSMs.Count < Utils.Utils.SPEC_COUNT);
-
                 FilteredResults.PPIResults = FilteredResults.PPIResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
-                FilteredResults.PPIResults.ForEach(a =>
-                {
-                    a.specCount = 0;
-                    if (a.XLs != null)
-                    {
-                        a.XLs.RemoveAll(b => b.log2FoldChange != null && b.pValue != null && b.log2FoldChange.Any(c => Math.Abs(c) < Utils.Utils.FOLD_CHANGE_CUTOFF) || b.pValue.Any(c => c > Utils.Utils.PVALUE_CUTOFF));
-                        a.specCount = a.XLs.Where(b => b.cSMs != null).Sum(b => b.cSMs.Count);
-                    }
-                });
-                FilteredResults.PPIResults.RemoveAll(a => a.XLs == null || a.XLs.Count < Utils.Utils.MIN_CROSSLINKEDPEPTIDES || a.specCount < Utils.Utils.SPEC_COUNT);
-
             }
             #endregion
 

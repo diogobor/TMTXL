@@ -65,7 +65,7 @@
                     </StackPanel>
                 </GroupBox.Header>
             </GroupBox>
-            <Label Margin="15,40,0,0" Content="Spectra count:" />
+            <Label Margin="15,40,0,0" Content="Spectral count:" />
             <xctk:IntegerUpDown Margin="160,45,-81,90" x:Name="IntegerUpDownSpecCount" Minimum="1" Value="2" ToolTip="Set the minimum number of spectra for each identified cross-linked peptide"  />
             <Label Margin="15,70,0,0" Content="# Cross-linked Peptides:" />
             <xctk:IntegerUpDown Margin="160,75,-81,60" x:Name="IntegerUpDownNoPeptides" Minimum="1" Value="2" ToolTip="Set the minimum number of cross-linked peptides for each protein-protein interaction"  />

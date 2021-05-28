@@ -62,12 +62,6 @@ namespace IsobaricAnalyzer
             double rightTail;
 
             alglib.studentttest1(dataset.ToArray(), dataset.Count, prioriProbability, out bothTails, out leftTail, out rightTail);
-
-            if (bothTails < 0.001)
-            {
-                bothTails = 0.001;
-            }
-
             return bothTails;
         }
     }
