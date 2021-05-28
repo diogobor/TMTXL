@@ -444,6 +444,7 @@ namespace TMTXL.Results
                 FilteredResults.XLSearchResults = FilteredResults.XLSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
                 FilteredResults.ResidueSearchResults = FilteredResults.ResidueSearchResults.Where(a => a.cSMs != null && a.cSMs.Count >= Utils.Utils.SPEC_COUNT && a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
                 FilteredResults.PPIResults = FilteredResults.PPIResults.Where(a => a.log2FoldChange != null && a.pValue != null && a.log2FoldChange.Any(b => Math.Abs(b) >= Utils.Utils.FOLD_CHANGE_CUTOFF) && a.pValue.Any(b => b <= Utils.Utils.PVALUE_CUTOFF)).ToList();
+                FilteredResults.PPIResults.RemoveAll(a => a.XLs == null || a.XLs.Count < Utils.Utils.MIN_CROSSLINKEDPEPTIDES || a.specCount < Utils.Utils.SPEC_COUNT);
             }
             #endregion
 
