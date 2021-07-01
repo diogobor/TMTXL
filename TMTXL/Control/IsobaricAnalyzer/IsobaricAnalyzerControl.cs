@@ -14,6 +14,8 @@ using System.Windows.Controls;
 using TMTXL.Control;
 using TMTXL.Model;
 using TMTXL.Utils;
+using Uniprot;
+using Uniprot.Model;
 
 namespace IsobaricAnalyzer
 {
@@ -173,6 +175,8 @@ namespace IsobaricAnalyzer
                     }
                 }
             }
+
+            resultsPackage.PPIResults.RemoveAll(a => a.XLs == null || a.XLs.Count == 0);
         }
 
         /// <summary>
@@ -303,79 +307,85 @@ namespace IsobaricAnalyzer
             int old_progress = 0;
             double qtdXL = xlDic.Count();
 
-                foreach (var xl in xlDic)
+            foreach (var xl in xlDic)
+            {
+                xl.csms.RemoveAll(a => a.log2FoldChange == null || (a.log2FoldChange != null && a.log2FoldChange.Any(b => double.IsNaN(b))));
+                if (xl.csms.Count == 0) continue;
+
+                List<string> alpha_ptns = new List<string>();
+                List<string> beta_ptns = new List<string>();
+                List<string> alpha_genes = new List<string>();
+                List<string> beta_genes = new List<string>();
+                xl.csms.ForEach(a =>
                 {
-                    xl.csms.RemoveAll(a => a.log2FoldChange == null || (a.log2FoldChange != null && a.log2FoldChange.Any(b => double.IsNaN(b))));
-                    if (xl.csms.Count == 0) continue;
+                    alpha_ptns.AddRange(a.proteins_alpha);
+                    beta_ptns.AddRange(a.proteins_beta);
+                    alpha_genes.AddRange(a.genes_alpha);
+                    beta_genes.AddRange(a.genes_beta);
+                }
+                );
 
-                    List<string> alpha_ptns = new List<string>();
-                    List<string> beta_ptns = new List<string>();
-                    List<string> alpha_genes = new List<string>();
-                    List<string> beta_genes = new List<string>();
-                    xl.csms.ForEach(a =>
+                XLSearchResult xlSr = new XLSearchResult(xl.csms);
+                xlSr.quantitation = xl.csms[0].quantitation;
+                xlSr.log2FoldChange = xl.csms[0].log2FoldChange;
+                xlSr.pValue = xl.csms[0].pValue;
+                xlSr.alpha_peptide = xl.csms[0].alpha_peptide;
+                xlSr.beta_peptide = xl.csms[0].beta_peptide;
+                xlSr.alpha_pept_xl_pos = xl.csms[0].alpha_pept_xl_pos;
+                xlSr.beta_pept_xl_pos = xl.csms[0].beta_pept_xl_pos;
+                xlSr.peptide_alpha_score = xl.csms[0].peptide_alpha_score;
+                xlSr.peptide_beta_score = xl.csms[0].peptide_beta_score;
+
+                if (xl.csms.Count > 1)
+                {
+                    int qtdFoldChange = xl.csms[0].log2FoldChange.Count;
+                    xlSr.log2FoldChange = new();
+                    xlSr.pValue = new();
+                    for (int i = 0; i < qtdFoldChange; i++)
                     {
-                        alpha_ptns.AddRange(a.proteins_alpha);
-                        beta_ptns.AddRange(a.proteins_beta);
-                        alpha_genes.AddRange(a.genes_alpha);
-                        beta_genes.AddRange(a.genes_beta);
-                    }
-                    );
+                        var folds = xl.csms.Select(a => a.log2FoldChange[i]).ToList();
 
-                    XLSearchResult xlSr = new XLSearchResult(xl.csms);
-                    xlSr.quantitation = xl.csms[0].quantitation;
-                    xlSr.log2FoldChange = xl.csms[0].log2FoldChange;
-                    xlSr.pValue = xl.csms[0].pValue;
-
-                    if (xl.csms.Count > 1)
-                    {
-                        int qtdFoldChange = xl.csms[0].log2FoldChange.Count;
-                        xlSr.log2FoldChange = new();
-                        xlSr.pValue = new();
-                        for (int i = 0; i < qtdFoldChange; i++)
+                        double median = 0;
+                        if (folds.Count > 0)
                         {
-                            var folds = xl.csms.Select(a => a.log2FoldChange[i]).ToList();
-
-                            double median = 0;
-                            if (folds.Count > 0)
-                            {
-                                if (folds.Count == 1)
-                                    median = folds[0];
-                                else
-                                {
-                                    median = Utils.Median(folds);
-                                }
-                            }
-
-                            xlSr.log2FoldChange.Add(median);
-                            xlSr.pValue.Add(folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xl.csms[0].pValue[i]);
-                        }
-                    }
-
-                    resultsPackage.XLSearchResults.Add(xlSr);
-
-                    lock (progress_lock)
-                    {
-                        xl_processed++;
-                        int new_progress = (int)((double)xl_processed / (qtdXL) * 100);
-                        if (new_progress > old_progress)
-                        {
-                            old_progress = new_progress;
-
-                            if (stdOut_console)
-                            {
-                                int currentLineCursor = Console.CursorTop;
-                                Console.SetCursorPosition(0, Console.CursorTop);
-                                Console.Write("XL Quantitation progress: " + old_progress + "%");
-                                Console.SetCursorPosition(0, currentLineCursor);
-
-                            }
+                            if (folds.Count == 1)
+                                median = folds[0];
                             else
                             {
-                                Console.Write("XL Quantitation progress: " + old_progress + "%");
+                                median = Utils.Median(folds);
                             }
+                        }
+
+                        xlSr.log2FoldChange.Add(median);
+                        xlSr.pValue.Add(folds.Count > 1 ? IsobaricUtils.computeOneSampleTtest(folds) : xl.csms[0].pValue[i]);
+                    }
+                }
+
+                resultsPackage.XLSearchResults.Add(xlSr);
+
+                lock (progress_lock)
+                {
+                    xl_processed++;
+                    int new_progress = (int)((double)xl_processed / (qtdXL) * 100);
+                    if (new_progress > old_progress)
+                    {
+                        old_progress = new_progress;
+
+                        if (stdOut_console)
+                        {
+                            int currentLineCursor = Console.CursorTop;
+                            Console.SetCursorPosition(0, Console.CursorTop);
+                            Console.Write("XL Quantitation progress: " + old_progress + "%");
+                            Console.SetCursorPosition(0, currentLineCursor);
+
+                        }
+                        else
+                        {
+                            Console.Write("XL Quantitation progress: " + old_progress + "%");
                         }
                     }
                 }
+            }
 
         }
 
@@ -919,6 +929,86 @@ namespace IsobaricAnalyzer
         public void LoadResults(string FileName)
         {
             resultsPackage.DeserializeResults(FileName);
+        }
+
+        public void ExportReults(string FileName)
+        {
+            this.getProteinlengthFromUniprot();
+            StreamWriter sw = new StreamWriter(FileName);
+            sw.WriteLine("gene_a,gene_b,ppi_score,length_protein_a,length_protein_b,protein_a,protein_b,crosslinks_ab,crosslinks_ba,score_ab,score_ba");
+            foreach (ProteinProteinInteraction ppi in resultsPackage.PPIResults)
+            {
+                StringBuilder sb_xls_scores = new();
+                foreach (var xl in ppi.XLs)
+                {
+                    sb_xls_scores.Append(ppi.gene_a + "-" + xl.alpha_pept_xl_pos + "-" + ppi.gene_a + "-" + xl.beta_pept_xl_pos + "#");
+                }
+                string crosslinks = sb_xls_scores.ToString().Substring(0, sb_xls_scores.ToString().Length - 1);
+
+                sb_xls_scores = new();
+                foreach (var xl in ppi.XLs)
+                {
+                    sb_xls_scores.Append(Math.Max(xl.peptide_alpha_score, xl.peptide_beta_mass) + "#");
+                }
+                string scores = sb_xls_scores.ToString().Substring(0, sb_xls_scores.ToString().Length - 2);
+                sw.WriteLine(ppi.gene_a + "," +
+                    ppi.gene_b + "," +
+                    ppi.score + "," +
+                    ppi.protein_a_length + "," +
+                    ppi.protein_b_length + "," +
+                    ppi.protein_a + "," +
+                    ppi.protein_b + "," +
+                    crosslinks + "," +
+                    crosslinks + "," +
+                    scores + "," +
+                    scores);
+            }
+            sw.Close();
+        }
+
+        private void getProteinlengthFromUniprot()
+        {
+            Connection connect = new Connection();
+            List<Protein> ptnList = new();
+            foreach (ProteinProteinInteraction ppi in resultsPackage.PPIResults)
+            {
+                ptnList.Add(new Protein("", ppi.protein_a, "", 0));
+                ptnList.Add(new Protein("", ppi.protein_b, "", 0));
+            }
+            ptnList.Sort((a, b) => a.AccessionNumber.CompareTo(b.AccessionNumber));
+            ptnList = ptnList.Distinct(new ProteinComparer()).ToList();
+            connect.Proteins = ptnList;
+
+            try
+            {
+                connect.Connect();
+            }
+            catch (Exception exc)
+            {
+                Console.WriteLine("ERROR: Error to retrieve data!\nPFAM/Subfam error: " + exc.Message);
+                return;
+            }
+
+            foreach (Protein protein in ptnList)
+            {
+                List<ProteinProteinInteraction> ppis = resultsPackage.PPIResults.Where(a => a.protein_a.Equals(protein.AccessionNumber)).ToList();
+                if (ppis != null && ppis.Count > 0)
+                {
+                    foreach (ProteinProteinInteraction ppi in ppis)
+                    {
+                        ppi.protein_a_length = protein.ProteinLength;
+                    }
+                }
+                ppis = resultsPackage.PPIResults.Where(a => a.protein_b.Equals(protein.AccessionNumber)).ToList();
+                if (ppis != null && ppis.Count > 0)
+                {
+                    foreach (ProteinProteinInteraction ppi in ppis)
+                    {
+                        ppi.protein_b_length = protein.ProteinLength;
+                    }
+                }
+            }
+
         }
     }
 }

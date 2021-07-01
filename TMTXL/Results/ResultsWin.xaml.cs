@@ -1402,6 +1402,62 @@ namespace TMTXL.Results
 
             applyFilter();
         }
+
+        private void CommandBindingExport_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
+        }
+        
+        private async void CommandBindingExport_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (FilteredResults == null || FilteredResults.CSMSearchResults == null || FilteredResults.CSMSearchResults.Count == 0)
+            {
+                System.Windows.Forms.MessageBox.Show("There is no data to be exported!", "Warning", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                return;
+            }
+
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = ""; // Default file name
+            dlg.Filter = "XlinkCyNET (*.csv)|*.csv"; // Filter files by extension
+            dlg.Title = "Save results";
+
+            // Show open file dialog box
+            Nullable<bool> result = dlg.ShowDialog();
+
+            if (result == true)
+            {
+                try
+                {
+                    await Task.Run(
+                                () =>
+                                {
+                                    IsobaricAnalyzerControl.ExportReults(dlg.FileName);
+                                });
+
+                    System.Windows.Forms.MessageBox.Show("The results have been exported successfully!", "Information", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
+                }
+                catch (Exception exc)
+                {
+                    Console.WriteLine("ERROR: " + exc.Message);
+                    System.Windows.Forms.MessageBox.Show("Failed to export!", "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+    }
+
+    public static class CustomCommands
+    {
+        public static RoutedUICommand Export = new RoutedUICommand
+            (
+                "Export",
+                "Export",
+                typeof(CustomCommands),
+                new InputGestureCollection()
+                {
+                    new KeyGesture(Key.E, ModifierKeys.Control)
+                }
+            );
     }
 
     public class CustomDataPoint : IScatterPointProvider

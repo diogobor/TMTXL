@@ -45,6 +45,8 @@ namespace TMTXL.Model
         public List<double> pValue;
         [ProtoMember(13)]
         public List<XLSearchResult> XLs;
+        public int protein_a_length { get; set; }
+        public int protein_b_length { get; set; }
 
         /// <summary>
         /// Constructor

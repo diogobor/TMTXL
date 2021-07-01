@@ -12,7 +12,8 @@
     <Window.CommandBindings>
         <CommandBinding Command="Open" CanExecute="CommandBindingOpen_CanExecute" Executed="CommandBindingOpen_Executed"/>
         <CommandBinding Command="Save" CanExecute="CommandBindingSave_CanExecute" Executed="CommandBindingSave_Executed"/>
-    </Window.CommandBindings>
+        <CommandBinding Command="local:CustomCommands.Export" CanExecute="CommandBindingExport_CanExecute" Executed="CommandBindingExport_Executed" />
+        </Window.CommandBindings>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -25,7 +26,6 @@
         <DockPanel>
             <Menu DockPanel.Dock="Top">
                 <MenuItem Header="_File">
-                    <!--<MenuItem Header="_New" />-->
                     <MenuItem Header="_Open results" Command="Open" >
                         <MenuItem.Icon>
                             <Image Source="/load.jpg" />
@@ -34,6 +34,11 @@
                     <MenuItem Header="_Save" Command="Save">
                         <MenuItem.Icon>
                             <Image Source="/Results/Save-icon.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="_Export results" Command="local:CustomCommands.Export">
+                        <MenuItem.Icon>
+                            <Image Source="/Results/export.ico" />
                         </MenuItem.Icon>
                     </MenuItem>
                     <Separator />
