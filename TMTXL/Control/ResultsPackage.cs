@@ -61,6 +61,8 @@ namespace TMTXL.Control
         /// <param name="fileName"></param>
         public void SerializeResults(string fileName)
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             if (this.CSMSearchResults.Count > MAX_ITEMS_TO_BE_SAVED ||
                 this.XLSearchResults.Count > MAX_ITEMS_TO_BE_SAVED ||
                 this.ResidueSearchResults.Count > MAX_ITEMS_TO_BE_SAVED ||
@@ -130,7 +132,6 @@ namespace TMTXL.Control
 
                 fileToCompress.Seek(0, SeekOrigin.Begin);   // <-- must do this after writing the stream!
 
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
                 using (ZipFile zipFile = new ZipFile())
                 {
                     zipFile.Password = "7M7X4@0@!";
