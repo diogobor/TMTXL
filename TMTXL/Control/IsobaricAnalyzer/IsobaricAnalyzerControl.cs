@@ -21,7 +21,7 @@ namespace IsobaricAnalyzer
 {
     public class IsobaricAnalyzerControl
     {
-
+        private const string DECOY_SEQ = "###RND###";
 
         /// <summary>
         /// Private variables
@@ -397,6 +397,11 @@ namespace IsobaricAnalyzer
             if (resultsPackage == null || resultsPackage.CSMSearchResults == null)
                 throw new Exception("There is no spectra to be quantified.");
 
+            Console.WriteLine("Removing decoy sequences...");
+            resultsPackage.CSMSearchResults.RemoveAll(a => (a.proteins_alpha.Count == 1 &&
+            a.proteins_alpha[0].Contains(DECOY_SEQ)) || (a.proteins_beta.Count == 1 &&
+            a.proteins_beta[0].Contains(DECOY_SEQ)));
+
             Console.WriteLine("Performing quantitation taking into account " + resultsPackage.CSMSearchResults.Count + " scans.");
 
             foreach (CSMSearchResult csm in resultsPackage.CSMSearchResults)
@@ -469,6 +474,7 @@ namespace IsobaricAnalyzer
 
             Console.WriteLine("Done!");
         }
+
         /// <summary>
         /// Method responsible for merging different MS2 spectra with the same precurosr
         /// </summary>

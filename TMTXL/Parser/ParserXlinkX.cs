@@ -230,13 +230,14 @@ namespace TMTXL.Parser
             if (_gene_alpha_index != -1)
                 gene_alpha = Regex.Split(gene_alpha_cols[_gene_alpha_index], "GN=")[1];
 
-            string[] gene_beta_cols = Regex.Split(protein_alpha, " ");
+            string[] gene_beta_cols = Regex.Split(protein_beta, " ");
             int _gene_beta_index = Array.FindIndex(gene_beta_cols, item => item.StartsWith("GN="));
             if (_gene_beta_index != -1)
                 gene_beta = Regex.Split(gene_beta_cols[_gene_beta_index], "GN=")[1];
 
             current_csm = new CSMSearchResult(_index, fileIndex, scanNumber, charge, precursor_mass, peptide_alpha, peptide_beta, pep_alpha_pos, pep_beta_pos, ptn_alpha_pos, ptn_beta_pos, new List<string>() { protein_alpha }, new List<string>() { protein_beta }, peptide_alpha_mass, peptide_beta_mass, peptide_alpha_score, peptide_beta_score, new List<string>() { gene_alpha }, new List<string>() { gene_beta });
         }
+        
         public static List<ProteinProteinInteraction> ParsePPI(string fileName)
         {
             List<ProteinProteinInteraction> ppiList = new List<ProteinProteinInteraction>();
