@@ -1407,7 +1407,7 @@ namespace TMTXL.Results
         {
             e.CanExecute = true;
         }
-        
+
         private async void CommandBindingExport_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             if (FilteredResults == null || FilteredResults.CSMSearchResults == null || FilteredResults.CSMSearchResults.Count == 0)

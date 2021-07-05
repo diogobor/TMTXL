@@ -118,7 +118,7 @@ namespace IsobaricAnalyzer
                 if (filteredXLs.Count > 0)
                 {
                     ppi.XLs = filteredXLs;
-                    ppi.specCount = filteredXLs.Count;
+                    ppi.specCount = filteredXLs.Sum(a => a.cSMs.Count);
 
                     List<CSMSearchResult> xlDic = new();
                     filteredXLs.ForEach(a => { xlDic.AddRange(a.cSMs); });
