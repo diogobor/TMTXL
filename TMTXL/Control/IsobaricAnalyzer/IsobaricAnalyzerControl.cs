@@ -22,6 +22,7 @@ namespace IsobaricAnalyzer
     public class IsobaricAnalyzerControl
     {
         private const string DECOY_SEQ = "###RND###";
+        private const int SCORE_THRESHOLD = 0;
 
         /// <summary>
         /// Private variables
@@ -83,6 +84,9 @@ namespace IsobaricAnalyzer
             }
 
             #endregion
+
+            //apply quality control filter before processing csms
+            this.qcCSM();
 
             //compute the quantitation for each spectrum
             this.computeCSMQuant();
@@ -473,6 +477,20 @@ namespace IsobaricAnalyzer
             }
 
             Console.WriteLine("Done!");
+        }
+
+        /// <summary>
+        /// Method responsible for removing poor spectra
+        /// </summary>
+        private void qcCSM()
+        {
+            if (resultsPackage == null || resultsPackage.CSMSearchResults == null)
+                throw new Exception("There is no spectra to be quantified.");
+
+            resultsPackage.CSMSearchResults.RemoveAll(a => -Math.Log10(Math.Min(a.peptide_alpha_score, a.peptide_beta_score)) < SCORE_THRESHOLD);
+
+            if (resultsPackage.CSMSearchResults.Count == 0)
+                throw new Exception("There is no spectra to be quantified.");
         }
 
         /// <summary>
@@ -945,16 +963,16 @@ namespace IsobaricAnalyzer
             foreach (ProteinProteinInteraction ppi in resultsPackage.PPIResults)
             {
                 StringBuilder sb_xls_scores = new();
-                foreach (var xl in ppi.XLs)
+                foreach (XLSearchResult xl in ppi.XLs)
                 {
-                    sb_xls_scores.Append(ppi.gene_a + "-" + xl.alpha_pept_xl_pos + "-" + ppi.gene_a + "-" + xl.beta_pept_xl_pos + "#");
+                    sb_xls_scores.Append(ppi.gene_a + "-" + xl.alpha_pept_xl_pos + "-" + ppi.gene_b + "-" + xl.beta_pept_xl_pos + "#");
                 }
                 string crosslinks = sb_xls_scores.ToString().Substring(0, sb_xls_scores.ToString().Length - 1);
 
                 sb_xls_scores = new();
-                foreach (var xl in ppi.XLs)
+                foreach (XLSearchResult xl in ppi.XLs)
                 {
-                    sb_xls_scores.Append(Math.Max(xl.peptide_alpha_score, xl.peptide_beta_mass) + "#");
+                    sb_xls_scores.Append(Math.Max(xl.peptide_alpha_score, xl.peptide_beta_score) + "#");
                 }
                 string scores = sb_xls_scores.ToString().Substring(0, sb_xls_scores.ToString().Length - 2);
                 sw.WriteLine(ppi.gene_a + "," +
