@@ -42,5 +42,36 @@ namespace TMTXL.Utils
             return median;
         }
 
+        /// <summary>
+        /// Method responsible for figuring out the lowest value of a list
+        /// </summary>
+        /// <param name="self"></param>
+        /// <returns>lowest value of the list</returns>
+        public static int IndexOfMin(List<double> self)
+        {
+            if (self == null)
+            {
+                throw new ArgumentNullException("self");
+            }
+
+            if (self.Count == 0)
+            {
+                throw new ArgumentException("List is empty.", "self");
+            }
+
+            double min = self[0];
+            int minIndex = 0;
+
+            for (int i = 1; i < self.Count; ++i)
+            {
+                if (self[i] < min)
+                {
+                    min = self[i];
+                    minIndex = i;
+                }
+            }
+
+            return minIndex;
+        }
     }
 }
