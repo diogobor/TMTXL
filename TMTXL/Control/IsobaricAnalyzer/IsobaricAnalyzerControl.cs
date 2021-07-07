@@ -284,6 +284,33 @@ namespace IsobaricAnalyzer
             }
         }
 
+        private int IndexOfMin(List<double> self)
+        {
+            if (self == null)
+            {
+                throw new ArgumentNullException("self");
+            }
+
+            if (self.Count == 0)
+            {
+                throw new ArgumentException("List is empty.", "self");
+            }
+
+            double min = self[0];
+            int minIndex = 0;
+
+            for (int i = 1; i < self.Count; ++i)
+            {
+                if (self[i] < min)
+                {
+                    min = self[i];
+                    minIndex = i;
+                }
+            }
+
+            return minIndex;
+        }
+
         /// <summary>
         /// Method responsible for quantifying XLs
         /// </summary>
@@ -337,8 +364,9 @@ namespace IsobaricAnalyzer
                 xlSr.beta_peptide = xl.csms[0].beta_peptide;
                 xlSr.alpha_pept_xl_pos = xl.csms[0].alpha_pept_xl_pos;
                 xlSr.beta_pept_xl_pos = xl.csms[0].beta_pept_xl_pos;
-                xlSr.peptide_alpha_score = xl.csms[0].peptide_alpha_score;
-                xlSr.peptide_beta_score = xl.csms[0].peptide_beta_score;
+                int _index = this.IndexOfMin(xl.csms.Select(a => Math.Min(a.peptide_alpha_score, a.peptide_beta_score)).ToList());
+                xlSr.peptide_alpha_score = xl.csms[_index].peptide_alpha_score;
+                xlSr.peptide_beta_score = xl.csms[_index].peptide_beta_score;
 
                 if (xl.csms.Count > 1)
                 {
