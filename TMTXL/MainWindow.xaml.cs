@@ -240,6 +240,13 @@ namespace TMTXL
                 List<double> row = new List<double>();
                 for (int j = 1; j < dt.Columns.Count; j++)
                 {
+                    //if (dt.Columns.Count == 7 && j == 4)// TMT 18-plex
+                    //{
+                    //    //We need to add the monoisotopic mass as -1 a requirement
+                    //    row.Add(-1);
+                    //}
+                    //else if (dt.Columns.Count == 5 && j == 3)
+                    //{
                     if (j == 3)
                     {
                         //We need to add the monoisotopic mass as -1 a requirement
@@ -345,11 +352,33 @@ namespace TMTXL
         {
             DataTable dt = new DataTable("Purity Corrections");
 
+            //if (comboBoxPurityDefaults.Text.Equals("TMT 18"))
+            //{
+            //    dt.Columns.Add("Label", typeof(string));
+            //    dt.Columns.Add("% of -3", typeof(double));
+            //    dt.Columns.Add("% of -2", typeof(double));
+            //    dt.Columns.Add("% of -1", typeof(double));
+            //    dt.Columns.Add("% of +1", typeof(double));
+            //    dt.Columns.Add("% of +2", typeof(double));
+            //    dt.Columns.Add("% of +3", typeof(double));
+            //    //    dt.Columns.Add("Label", typeof(string));
+            //    //    dt.Columns.Add("% of -2x13C", typeof(double));
+            //    //    dt.Columns.Add("% of -13C-15N", typeof(double));
+            //    //    dt.Columns.Add("% of -13C", typeof(double));
+            //    //    dt.Columns.Add("% of -15N", typeof(double));
+            //    //    dt.Columns.Add("% of +15N", typeof(double));
+            //    //    dt.Columns.Add("% of +13C", typeof(double));
+            //    //    dt.Columns.Add("% of +13C15N", typeof(double));
+            //    //    dt.Columns.Add("% of +2x13C", typeof(double));
+            //}
+            //else
+            //{
             dt.Columns.Add("Label", typeof(string));
             dt.Columns.Add("% of -2", typeof(double));
             dt.Columns.Add("% of -1", typeof(double));
             dt.Columns.Add("% of +1", typeof(double));
             dt.Columns.Add("% of +2", typeof(double));
+            //}
 
             switch (comboBoxPurityDefaults.Text)
             {
@@ -576,6 +605,106 @@ namespace TMTXL
                     control_channel_combobox.SelectedIndex = 0;
 
                     isobaric_masses_label_textbox.Text = "126.127726 127.124761 127.131081 128.128116 128.134436 129.131471 129.137790 130.134825 130.141145 131.138180 131.1445 132.14153 132.14785 133.14489 133.15121 134.14824";
+                    break;
+
+                case "TMT 18":
+
+                    DataRow dr18TMT126 = dt.NewRow();
+                    dr18TMT126.ItemArray = new object[] { "126", /*0,*/ 0, 0, 0.31, 9.09/*, 0.32*/ };
+                    dt.Rows.Add(dr18TMT126);
+
+                    DataRow dr18TMT127N = dt.NewRow();
+                    dr18TMT127N.ItemArray = new object[] { "127N", /*0,*/ 0, 0.78, 0, 9.41/*, 0.33*/ };
+                    dt.Rows.Add(dr18TMT127N);
+
+                    DataRow dr18TMT127C = dt.NewRow();
+                    dr18TMT127C.ItemArray = new object[] { "127C", /*0,*/ 0.93, 0, 0.35, 8.63/*, 0.27 */};
+                    dt.Rows.Add(dr18TMT127C);
+
+                    DataRow dr18TMT128N = dt.NewRow();
+                    dr18TMT128N.ItemArray = new object[] { "128N", /*0,*/ 0.82, 0.65, 0, 8.13/*, 0.26*/ };
+                    dt.Rows.Add(dr18TMT128N);
+
+                    DataRow dr18TMT128C = dt.NewRow();
+                    dr18TMT128C.ItemArray = new object[] { "128C", /*0,*/ 1.47, 0, 0.34, 6.91/*, 0.15*/ };
+                    dt.Rows.Add(dr18TMT128C);
+
+                    DataRow dr18TMT129N = dt.NewRow();
+                    dr18TMT129N.ItemArray = new object[] { "129N", /*0,*/ 1.46, 1.28, 0, 6.86/*, 0.15 */};
+                    dt.Rows.Add(dr18TMT129N);
+
+                    DataRow dr18TMT129C = dt.NewRow();
+                    dr18TMT129C.ItemArray = new object[] { "129C", /*0.51,*/ 2.74, 0, 0.36, 6.15/*, 0.11 */};
+                    dt.Rows.Add(dr18TMT129C);
+
+                    DataRow dr18TMT130N = dt.NewRow();
+                    dr18TMT130N.ItemArray = new object[] { "130N", /*0.13,*/ 2.41, 0.27, 0, 5.58/*, 0.11*/ };
+                    dt.Rows.Add(dr18TMT130N);
+
+                    DataRow dr18TMT130C = dt.NewRow();
+                    dr18TMT130C.ItemArray = new object[] { "130C", /*0.04,*/ 3.1, 0, 0.42, 4.82/*, 0.06*/ };
+                    dt.Rows.Add(dr18TMT130C);
+
+                    DataRow dr18TMT131N = dt.NewRow();
+                    dr18TMT131N.ItemArray = new object[] { "131N", /*0.03,*/ 2.78, 0.63, 0, 4.57/*, 0.12 */};
+                    dt.Rows.Add(dr18TMT131N);
+
+                    DataRow dr18TMT131C = dt.NewRow();
+                    dr18TMT131C.ItemArray = new object[] { "131C", /*0.08,*/ 3.9, 0, 0.47, 3.57/*, 0.04*/ };
+                    dt.Rows.Add(dr18TMT131C);
+
+                    DataRow dr18TMT132N = dt.NewRow();
+                    dr18TMT132N.ItemArray = new object[] { "132N", /*0.15,*/ 3.58, 0.72, 0, 1.8/*, 0 */};
+                    dt.Rows.Add(dr18TMT132N);
+
+                    DataRow dr18TMT132C = dt.NewRow();
+                    dr18TMT132C.ItemArray = new object[] { "132C", /*0.11,*/ 4.55, 0, 0.43, 1.86/*, 0 */};
+                    dt.Rows.Add(dr18TMT132C);
+
+                    DataRow dr18TMT133N = dt.NewRow();
+                    dr18TMT133N.ItemArray = new object[] { "133N", /*0.07,*/ 3.14, 0.73, 0, 3.4/*, 0 */};
+                    dt.Rows.Add(dr18TMT133N);
+
+                    DataRow dr18TMT133C = dt.NewRow();
+                    dr18TMT133C.ItemArray = new object[] { "133C", /*0.22,*/ 4.96, 0, 0.34, 1.03/*, 0.03*/ };
+                    dt.Rows.Add(dr18TMT133C);
+
+                    DataRow dr18TMT134N = dt.NewRow();
+                    dr18TMT134N.ItemArray = new object[] { "134N",/* 0.3, */5.49, 0.62, 0, 1.14/*, 0 */};
+                    dt.Rows.Add(dr18TMT134N);
+
+                    DataRow dr18TMT134C = dt.NewRow();
+                    dr18TMT134C.ItemArray = new object[] { "134C", /*0.14,*/ 5.81, 0, 0.31, 0/*, 0*/ };
+                    dt.Rows.Add(dr18TMT134C);
+
+                    DataRow dr18TMT135N = dt.NewRow();
+                    dr18TMT135N.ItemArray = new object[] { "135N", /*0.19,*/ 5.42, 0.36, 0, 0/*, 0*/ };
+                    dt.Rows.Add(dr18TMT135N);
+
+                    class_label_textbox.Text = "1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2";
+
+                    control_channel_combobox.Items.Clear();
+                    control_channel_combobox.Items.Add("126");
+                    control_channel_combobox.Items.Add("127N");
+                    control_channel_combobox.Items.Add("127C");
+                    control_channel_combobox.Items.Add("128N");
+                    control_channel_combobox.Items.Add("128C");
+                    control_channel_combobox.Items.Add("129N");
+                    control_channel_combobox.Items.Add("129C");
+                    control_channel_combobox.Items.Add("130N");
+                    control_channel_combobox.Items.Add("130C");
+                    control_channel_combobox.Items.Add("131N");
+                    control_channel_combobox.Items.Add("131C");
+                    control_channel_combobox.Items.Add("132N");
+                    control_channel_combobox.Items.Add("132C");
+                    control_channel_combobox.Items.Add("133N");
+                    control_channel_combobox.Items.Add("133C");
+                    control_channel_combobox.Items.Add("134N");
+                    control_channel_combobox.Items.Add("134C");
+                    control_channel_combobox.Items.Add("135N");
+                    control_channel_combobox.SelectedIndex = 0;
+
+                    isobaric_masses_label_textbox.Text = "126.127726 127.124761 127.131081 128.128116 128.134436 129.131471 129.137790 130.134825 130.141145 131.138180 131.1445 132.14153 132.14785 133.14489 133.15121 134.148245 134.154565 135.1516";
                     break;
 
             }

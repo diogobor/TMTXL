@@ -74,6 +74,9 @@ namespace IsobaricAnalyzer
         /// </summary>
         public void computeQuantitation()
         {
+            //apply quality control filter before processing csms
+            this.qcCSM();
+
             this.processRawFiles();
 
             #region initialize dictionary(ies) for the normalize reporter ions (channels) of all or identified spectra
@@ -84,9 +87,6 @@ namespace IsobaricAnalyzer
             }
 
             #endregion
-
-            //apply quality control filter before processing csms
-            this.qcCSM();
 
             //compute the quantitation for each spectrum
             this.computeCSMQuant();
@@ -411,7 +411,7 @@ namespace IsobaricAnalyzer
 
             foreach (CSMSearchResult csm in resultsPackage.CSMSearchResults)
             {
-                string fileName = resultsPackage.FileNameIndex[csm.fileIndex];
+                string fileName = Utils.RemoveExtension(resultsPackage.FileNameIndex[csm.fileIndex]);
 
                 if (csm.quantitation == null) continue;
 
@@ -477,7 +477,7 @@ namespace IsobaricAnalyzer
                 }
             }
 
-            Console.WriteLine("Done!");
+            Console.WriteLine("CSM quantitation has been done!");
         }
 
         /// <summary>
@@ -601,6 +601,8 @@ namespace IsobaricAnalyzer
 
         }
 
+
+
         /// <summary>
         /// Method responsible for reading all spectra files and process all of them
         /// </summary>
@@ -636,10 +638,21 @@ namespace IsobaricAnalyzer
             {
                 Console.WriteLine("Extracting MS/MS for " + rawFile.Name);
 
-                string current_fileNme = rawFile.Name.Substring(0, rawFile.Name.Length - rawFile.Extension.Length);
-                int rawFileIndex = resultsPackage.FileNameIndex.IndexOf(current_fileNme);
+                string current_fileNme = Utils.RemoveExtension(rawFile.Name);
+                List<string> filesWithoutExtension = (from file in resultsPackage.FileNameIndex
+                                                      where file.Contains(".")
+                                                      select Utils.RemoveExtension(file)).ToList();
 
-                List<MSUltraLight> spectraFromAThermoFile = (from ms in PatternTools.MSParserLight.ParserUltraLightRawFlash.Parse(rawFile.FullName, 2, (short)rawFileIndex, false, null, stdOut_console).AsParallel()
+                filesWithoutExtension.AddRange((from file in resultsPackage.FileNameIndex
+                                                where !file.Contains(".")
+                                                select file).ToList());
+                filesWithoutExtension = filesWithoutExtension.Distinct().ToList();
+                int rawFileIndex = filesWithoutExtension.IndexOf(current_fileNme);
+
+                List<int> interestedSpectra = resultsPackage.CSMSearchResults.Where(a => a.fileIndex == rawFileIndex).Select(b => b.scanNumber).ToList();
+                interestedSpectra.Sort();
+
+                List<MSUltraLight> spectraFromAThermoFile = (from ms in PatternTools.MSParserLight.ParserUltraLightRawFlash.Parse(rawFile.FullName, 2, (short)rawFileIndex, false, interestedSpectra, stdOut_console).AsParallel()
                                                              select new MSUltraLight()
                                                              {
                                                                  ActivationType = ms.ActivationType,
@@ -832,7 +845,7 @@ namespace IsobaricAnalyzer
                     Console.Write("Total multiplex spectra: " + totalMultiplexSpectra);
                 Console.Write("Done!");
 
-                string theName = rawFile.Name.Substring(0, rawFile.Name.Length - 4);
+                string theName = Utils.RemoveExtension(rawFile.Name);
                 //theName += "ctxt";
 
                 signalAllNormalizationDictionary.Add(theName, totalSignal);
@@ -857,7 +870,7 @@ namespace IsobaricAnalyzer
 
             foreach (string fileName in fileNames)
             {
-                signalIdentifiedNormalizationDictionary.Add(fileName, new double[myParams.MarkerMZs.Count]);
+                signalIdentifiedNormalizationDictionary.Add(Utils.RemoveExtension(fileName), new double[myParams.MarkerMZs.Count]);
             }
             #endregion
 

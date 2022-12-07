@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <StartupObject>TMTXL.Control.Program</StartupObject>
@@ -24,6 +24,7 @@
   <ItemGroup>
     <PackageReference Include="OxyPlot.Core.Drawing" Version="2.0.0" />
     <PackageReference Include="OxyPlot.Wpf" Version="2.0.0" />
+    <PackageReference Include="protobuf-net" Version="3.1.25" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0-preview.1.21102.12" />
     <PackageReference Include="ThermoFisher.CommonCore.BackgroundSubtraction" Version="5.0.0.38" />
     <PackageReference Include="ThermoFisher.CommonCore.Data" Version="5.0.0.38" />
@@ -54,17 +55,20 @@
     <Reference Include="alglibnet2">
       <HintPath>libs\alglibnet2.dll</HintPath>
     </Reference>
+    <Reference Include="Digestor">
+      <HintPath>..\..\..\Project2022\MSScout\MSScoutGUI\bin\Debug\net6.0-windows7.0\Digestor.dll</HintPath>
+    </Reference>
     <Reference Include="Ionic.Zip">
       <HintPath>libs\Ionic.Zip.dll</HintPath>
     </Reference>
-    <Reference Include="protobuf-net">
-      <HintPath>libs\protobuf-net.dll</HintPath>
+    <Reference Include="ScoutCore">
+      <HintPath>..\..\..\Project2022\MSScout\MSScoutGUI\bin\Debug\net6.0-windows7.0\ScoutCore.dll</HintPath>
+    </Reference>
+    <Reference Include="ScoutPostProcessing">
+      <HintPath>..\..\..\Project2022\MSScout\MSScoutGUI\bin\Debug\net6.0-windows7.0\ScoutPostProcessing.dll</HintPath>
     </Reference>
     <Reference Include="SpectrumViewer2">
       <HintPath>libs\SpectrumViewer2.dll</HintPath>
-    </Reference>
-    <Reference Include="SpectrumWizard">
-      <HintPath>libs\SpectrumWizard.dll</HintPath>
     </Reference>
   </ItemGroup>
 

@@ -62,7 +62,7 @@ namespace IsobaricAnalyzer
             for (int i = 0; i < correctionTable.Count; i++)
             {
                 counter++;
-                for (int j = 0; j < 5; j++)
+                for (int j = 0; j < correctionTable[0].Count; j++)
                 {
                     try
                     {

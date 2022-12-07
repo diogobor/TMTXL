@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -73,5 +74,13 @@ namespace TMTXL.Utils
 
             return minIndex;
         }
+
+        public static string RemoveExtension(string fileName)
+        {
+            FileInfo rawFile = new FileInfo(fileName);
+            string current_fileName = rawFile.Name.Substring(0, rawFile.Name.Length - rawFile.Extension.Length);
+            return current_fileName;
+        }
+
     }
 }

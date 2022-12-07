@@ -125,6 +125,7 @@
                                     <ComboBoxItem>TMT 6</ComboBoxItem>
                                     <ComboBoxItem>TMT 10</ComboBoxItem>
                                     <ComboBoxItem>TMT 16</ComboBoxItem>
+                                    <ComboBoxItem>TMT 18</ComboBoxItem>
                                 </ComboBox>
                             </Grid>
                         </GroupBox>
