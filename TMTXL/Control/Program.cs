@@ -268,8 +268,8 @@ namespace TMTXL.Control
 
             foreach (var ppi in filteredPPIs)
             {
-                string geneA = ppi.AlphaGenes != null ? ppi.AlphaGenes[0] : ppi.ProteinAlphaString;
-                string geneB = ppi.BetaGenes != null ? ppi.BetaGenes[0] : ppi.ProteinBetaString;
+                string geneA = ppi.GeneAlphaString != null ? ppi.GeneAlphaString : ppi.ProteinAlphaString;
+                string geneB = ppi.GeneBetaString != null ? ppi.GeneBetaString : ppi.ProteinBetaString;
                 ProteinProteinInteraction current_ppi = new ProteinProteinInteraction(
                     geneA,
                     geneB,
