@@ -262,19 +262,19 @@ namespace TMTXL.Control
         {
             List<ProteinProteinInteraction> _PPIs = new List<ProteinProteinInteraction>();
             List<PPI> filteredPPIs = null;
-            PPIPackage ppis = post.PackagePPI;
+            PPIPackage ppis = post.PackagePPIs;
             if (ppis != null)
                 filteredPPIs = ppis.FilteredPPIs;
 
             foreach (var ppi in filteredPPIs)
             {
-                string geneA = ppi.GeneAlphaString != null ? ppi.GeneAlphaString : ppi.ProteinAlphaString;
-                string geneB = ppi.GeneBetaString != null ? ppi.GeneBetaString : ppi.ProteinBetaString;
+                string geneA = ppi.GeneOneString != null ? ppi.GeneOneString : ppi.ProteinOneString;
+                string geneB = ppi.GeneTwoString != null ? ppi.GeneTwoString : ppi.ProteinTwoString;
                 ProteinProteinInteraction current_ppi = new ProteinProteinInteraction(
                     geneA,
                     geneB,
-                    ppi.ProteinAlphaString,
-                    ppi.ProteinBetaString,
+                    ppi.ProteinOneString,
+                    ppi.ProteinTwoString,
                     ppi.ClassificationScore,
                     ppi.ClassificationScore);
                 _PPIs.Add(current_ppi);
@@ -300,8 +300,8 @@ namespace TMTXL.Control
                 Digestor.PeptideMapping bestMappingAlpha = csm.AlphaMappings.MaxBy(a => post.ProteinScores[a.Locus]);
                 Digestor.PeptideMapping bestMappingBeta = csm.BetaMappings.MaxBy(a => post.ProteinScores[a.Locus]);
 
-                int alphaAminoacidPosition = bestMappingAlpha.ProteinPosition + csm.AlphaPSM.ReagentPosition + 1;
-                int betaAminoacidPosition = bestMappingBeta.ProteinPosition + csm.BetaPSM.ReagentPosition + 1;
+                int alphaAminoacidPosition = bestMappingAlpha.ProteinPosition + csm.AlphaPSM.ReagentPosition1 + 1;
+                int betaAminoacidPosition = bestMappingBeta.ProteinPosition + csm.BetaPSM.ReagentPosition1 + 1;
 
                 CSMSearchResult _csm = new CSMSearchResult(
                     "",
@@ -313,8 +313,8 @@ namespace TMTXL.Control
                     csm.BetaPSM.Peptide.AsCleanString,
                     (short)alphaAminoacidPosition,
                     (short)betaAminoacidPosition,
-                    (short)csm.AlphaPSM.ReagentPosition,
-                    (short)csm.BetaPSM.ReagentPosition,
+                    (short)csm.AlphaPSM.ReagentPosition1,
+                    (short)csm.BetaPSM.ReagentPosition1,
                     csm.AlphaMappings.Select(a => a.Locus).ToList(),
                     csm.BetaMappings.Select(a => a.Locus).ToList(),
                     csm.AlphaPSM.Peptide.MH,

@@ -22,6 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="MemoryPack" Version="1.9.13" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="OxyPlot.Core.Drawing" Version="2.0.0" />
     <PackageReference Include="OxyPlot.Wpf" Version="2.0.0" />
     <PackageReference Include="protobuf-net" Version="3.1.25" />
@@ -55,11 +58,11 @@
     <Reference Include="alglibnet2">
       <HintPath>libs\alglibnet2.dll</HintPath>
     </Reference>
+    <Reference Include="CSMSL">
+      <HintPath>libs\CSMSL.dll</HintPath>
+    </Reference>
     <Reference Include="Digestor">
       <HintPath>..\..\..\Project2022\MSScout\MSScoutGUI\bin\Debug\net6.0-windows7.0\Digestor.dll</HintPath>
-    </Reference>
-    <Reference Include="Ionic.Zip">
-      <HintPath>libs\Ionic.Zip.dll</HintPath>
     </Reference>
     <Reference Include="ScoutCore">
       <HintPath>..\..\..\Project2022\MSScout\MSScoutGUI\bin\Debug\net6.0-windows7.0\ScoutCore.dll</HintPath>
@@ -69,6 +72,9 @@
     </Reference>
     <Reference Include="SpectrumViewer2">
       <HintPath>libs\SpectrumViewer2.dll</HintPath>
+    </Reference>
+    <Reference Include="SpectrumWizard">
+      <HintPath>libs\SpectrumWizard.dll</HintPath>
     </Reference>
   </ItemGroup>
 
